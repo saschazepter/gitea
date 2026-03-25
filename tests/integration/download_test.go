@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"code.gitea.io/gitea/modules/setting"
+	"code.gitea.io/gitea/modules/test"
 	"code.gitea.io/gitea/tests"
 
 	"github.com/stretchr/testify/assert"
@@ -78,16 +79,19 @@ func TestDownloadRawTextFileWithoutMimeTypeMapping(t *testing.T) {
 
 func TestDownloadRawTextFileWithMimeTypeMapping(t *testing.T) {
 	defer tests.PrepareTestEnv(t)()
-	setting.MimeTypeMap.Map[".xml"] = "text/xml"
-	setting.MimeTypeMap.Enabled = true
+	defer test.MockVariableValue(&setting.MimeTypeMap)()
 
+	setting.MimeTypeMap.Enabled = true
 	session := loginUser(t, "user2")
 
+	setting.MimeTypeMap.Map[".xml"] = "text/xml"
 	req := NewRequest(t, "GET", "/user2/repo2/raw/branch/master/test.xml")
 	resp := session.MakeRequest(t, req, http.StatusOK)
-
+	assert.Equal(t, "inline; filename=test.xml", resp.Header().Get("Content-Disposition"))
 	assert.Equal(t, "text/xml; charset=utf-8", resp.Header().Get("Content-Type"))
 
-	delete(setting.MimeTypeMap.Map, ".xml")
-	setting.MimeTypeMap.Enabled = false
+	setting.MimeTypeMap.Map[".xml"] = "application/xml"
+	req = NewRequest(t, "GET", "/user2/repo2/raw/branch/master/test.xml")
+	resp = session.MakeRequest(t, req, http.StatusOK)
+	assert.Equal(t, "application/xml", resp.Header().Get("Content-Type"))
 }
