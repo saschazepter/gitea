@@ -172,13 +172,13 @@ func (b *Base) Redirect(location string, status ...int) {
 
 type ServeHeaderOptions httplib.ServeHeaderOptions
 
-func (b *Base) SetServeHeaders(opt *ServeHeaderOptions) {
-	httplib.ServeSetHeaders(b.Resp, *(*httplib.ServeHeaderOptions)(opt))
+func (b *Base) SetServeHeaders(opts ServeHeaderOptions) {
+	httplib.ServeSetHeaders(b.Resp, httplib.ServeHeaderOptions(opts))
 }
 
 // ServeContent serves content to http request
-func (b *Base) ServeContent(r io.ReadSeeker, opts *ServeHeaderOptions) {
-	httplib.ServeSetHeaders(b.Resp, *(*httplib.ServeHeaderOptions)(opts))
+func (b *Base) ServeContent(r io.ReadSeeker, opts ServeHeaderOptions) {
+	httplib.ServeSetHeaders(b.Resp, httplib.ServeHeaderOptions(opts))
 	http.ServeContent(b.Resp, b.Req, opts.Filename, opts.LastModified, r)
 }
 
