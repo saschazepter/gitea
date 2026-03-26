@@ -7,7 +7,7 @@
 		{{if .DefaultBranchBranch}}
 			<h4 class="ui top attached header">
 				{{ctx.Locale.Tr "repo.default_branch"}}
-				{{if and $.IsWriter (not $.Repository.IsArchived) (not .IsDeleted)}}
+				{{if and $.IsWriter (not $.Repository.IsArchived) (not .IsDeleted) (not $.IsMirror)}}
 				<a role="button" class="right" href="{{.RepoLink}}/settings/branches" data-tooltip-content="{{ctx.Locale.Tr "repo.settings.branches.switch_default_branch"}}">
 					{{svg "octicon-arrow-switch"}}
 				</a>
@@ -31,7 +31,7 @@
 							</td>
 							{{/* FIXME: here and below, the tw-overflow-visible is not quite right but it is still needed the moment: to show the important buttons when the width is narrow */}}
 							<td class="tw-text-right tw-overflow-visible">
-								{{if and $.IsWriter (not $.Repository.IsArchived) (not .IsDeleted)}}
+								{{if and $.IsWriter (not $.Repository.IsArchived) (not .IsDeleted) (not $.IsMirror)}}
 									<button class="btn interact-bg show-create-branch-modal tw-p-2"
 										data-modal="#create-branch-modal"
 										data-branch-from="{{$.DefaultBranchBranch.DBBranch.Name}}"
@@ -157,7 +157,7 @@
 							</td>
 							{{/* FIXME: here and above, the tw-overflow-visible is not quite right */}}
 							<td class="three wide tw-text-right tw-overflow-visible">
-								{{if and $.IsWriter (not $.Repository.IsArchived) (not .DBBranch.IsDeleted)}}
+								{{if and $.IsWriter (not $.Repository.IsArchived) (not .DBBranch.IsDeleted) (not $.IsMirror)}}
 									<button class="btn interact-bg tw-p-2 show-modal show-create-branch-modal"
 										data-branch-from="{{.DBBranch.Name}}"
 										data-branch-from-urlcomponent="{{PathEscapeSegments .DBBranch.Name}}"
