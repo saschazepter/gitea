@@ -5,10 +5,7 @@ package git
 
 import (
 	"bytes"
-	"fmt"
 	"io"
-
-	"code.gitea.io/gitea/modules/log"
 )
 
 // ParseTreeEntries parses the output of a `git ls-tree -l` command.
@@ -51,7 +48,7 @@ func catBatchParseTreeEntries(objectFormat ObjectFormat, ptree *Tree, rd Buffere
 
 loop:
 	for sz > 0 {
-		mode, fname, sha, count, err := ParseCatFileTreeLine(objectFormat, rd)
+		mode, fname, objID, count, err := ParseCatFileTreeLine(objectFormat, rd)
 		if err != nil {
 			if err == io.EOF {
 				break loop
@@ -61,15 +58,9 @@ loop:
 		sz -= int64(count)
 		entry := new(TreeEntry)
 		entry.ptree = ptree
-
-		entry.entryMode = ParseEntryMode(string(mode))
-		if entry.entryMode == EntryModeNoEntry {
-			log.Debug("Unknown mode: %v", string(mode))
-			return nil, fmt.Errorf("unknown mode: %v", string(mode))
-		}
-
-		entry.ID = objectFormat.MustID(sha)
-		entry.name = string(fname)
+		entry.entryMode = mode
+		entry.ID = objID
+		entry.name = fname
 		entries = append(entries, entry)
 	}
 	if _, err := rd.Discard(1); err != nil {

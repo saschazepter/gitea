@@ -10,6 +10,7 @@ import (
 	"errors"
 	"io"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -172,50 +173,46 @@ headerLoop:
 	return id, DiscardFull(rd, size-n+1)
 }
 
-// git tree files are a list:
-// <mode-in-ascii> SP <fname> NUL <binary Hash>
-//
-// Unfortunately this 20-byte notation is somewhat in conflict to all other git tools
-// Therefore we need some method to convert these binary hashes to hex hashes
-
 // ParseCatFileTreeLine reads an entry from a tree in a cat-file --batch stream
-//
-// Each line is composed of:
-// <mode-in-ascii-dropping-initial-zeros> SP <fname> NUL <binary HASH>
-//
-// We don't attempt to convert the raw HASH to save a lot of time
-func ParseCatFileTreeLine(objectFormat ObjectFormat, rd BufferedReader) (mode, fname, sha []byte, n int, err error) {
-	// Read the mode and fname up to and including the NUL separator.
-	// ReadBytes (unlike ReadSlice) always returns a freshly allocated slice,
-	// so mode and fname can safely reference into it across subsequent reads.
-	readBytes, err := rd.ReadBytes('\x00')
-	if err != nil {
-		return mode, fname, sha, n, err
-	}
-	idx := bytes.IndexByte(readBytes, ' ')
-	if idx < 0 {
-		log.Debug("missing space in readBytes ParseCatFileTreeLine: %s", readBytes)
-		return mode, fname, sha, n, &ErrNotExist{}
-	}
-
-	mode = readBytes[:idx]
-	fname = readBytes[idx+1 : len(readBytes)-1] // trim the NUL terminator
-	n = len(readBytes)
-
-	// Read the binary hash
-	length := objectFormat.FullLength() / 2
-	sha = make([]byte, length)
-	idx = 0
-	for idx < length {
-		var read int
-		read, err = rd.Read(sha[idx:length])
-		n += read
-		if err != nil {
-			return mode, fname, sha, n, err
+// Each entry is composed of:
+// <mode-in-ascii-dropping-initial-zeros> SP <name> NUL <binary-hash>
+func ParseCatFileTreeLine(objectFormat ObjectFormat, rd BufferedReader) (mode EntryMode, name string, objID ObjectID, n int, err error) {
+	// use the in-buffer memory as much as possible to avoid extra allocations
+	bufBytes, err := rd.ReadSlice('\x00')
+	const maxEntryInfoBytes = 1024 * 1024
+	if errors.Is(err, bufio.ErrBufferFull) {
+		bufBytes = slices.Clone(bufBytes)
+		for len(bufBytes) < maxEntryInfoBytes && errors.Is(err, bufio.ErrBufferFull) {
+			var tmp []byte
+			tmp, err = rd.ReadSlice('\x00')
+			bufBytes = append(bufBytes, tmp...)
 		}
-		idx += read
 	}
-	return mode, fname, sha, n, err
+	if err != nil {
+		return mode, name, objID, len(bufBytes), err
+	}
+
+	idx := bytes.IndexByte(bufBytes, ' ')
+	if idx < 0 {
+		return mode, name, objID, len(bufBytes), errors.New("invalid CatFileTreeLine output")
+	}
+
+	mode = ParseEntryMode(util.UnsafeBytesToString(bufBytes[:idx]))
+	name = string(bufBytes[idx+1 : len(bufBytes)-1]) // trim the NUL terminator
+	if mode == EntryModeNoEntry {
+		return mode, name, objID, len(bufBytes), errors.New("invalid entry mode: " + string(bufBytes[:idx]))
+	}
+
+	switch objectFormat {
+	case Sha1ObjectFormat:
+		objID = &Sha1Hash{}
+	case Sha256ObjectFormat:
+		objID = &Sha256Hash{}
+	default:
+		panic("unsupported object format: " + objectFormat.Name())
+	}
+	readIDLen, err := io.ReadFull(rd, objID.RawValue())
+	return mode, name, objID, len(bufBytes) + readIDLen, err
 }
 
 func DiscardFull(rd BufferedReader, discard int64) error {

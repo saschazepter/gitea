@@ -8,7 +8,6 @@ package pipeline
 import (
 	"bufio"
 	"bytes"
-	"encoding/hex"
 	"io"
 	"sort"
 	"strings"
@@ -89,23 +88,23 @@ func findLFSFileFunc(repo *git.Repository, objectID git.ObjectID, revListReader 
 			case "tree":
 				var n int64
 				for n < info.Size {
-					mode, fname, binObjectID, count, err := git.ParseCatFileTreeLine(objectID.Type(), batchReader)
+					mode, fname, shaID, count, err := git.ParseCatFileTreeLine(objectID.Type(), batchReader)
 					if err != nil {
 						return nil, err
 					}
 					n += int64(count)
-					if bytes.Equal(binObjectID, objectID.RawValue()) {
+					if bytes.Equal(shaID.RawValue(), objectID.RawValue()) {
 						result := LFSResult{
-							Name:         curPath + string(fname),
+							Name:         curPath + fname,
 							SHA:          curCommit.ID.String(),
 							Summary:      strings.Split(strings.TrimSpace(curCommit.CommitMessage), "\n")[0],
 							When:         curCommit.Author.When,
 							ParentHashes: curCommit.Parents,
 						}
-						resultsMap[curCommit.ID.String()+":"+curPath+string(fname)] = &result
-					} else if string(mode) == git.EntryModeTree.String() {
-						trees = append(trees, hex.EncodeToString(binObjectID))
-						paths = append(paths, curPath+string(fname)+"/")
+						resultsMap[curCommit.ID.String()+":"+curPath+fname] = &result
+					} else if mode == git.EntryModeTree {
+						trees = append(trees, shaID.String())
+						paths = append(paths, curPath+fname+"/")
 					}
 				}
 				if _, err := batchReader.Discard(1); err != nil {
