@@ -185,7 +185,9 @@ headerLoop:
 //
 // We don't attempt to convert the raw HASH to save a lot of time
 func ParseCatFileTreeLine(objectFormat ObjectFormat, rd BufferedReader) (mode, fname, sha []byte, n int, err error) {
-	// Read the mode and fname up to and including the NUL separator
+	// Read the mode and fname up to and including the NUL separator.
+	// ReadBytes (unlike ReadSlice) always returns a freshly allocated slice,
+	// so mode and fname can safely reference into it across subsequent reads.
 	readBytes, err := rd.ReadBytes('\x00')
 	if err != nil {
 		return mode, fname, sha, n, err
