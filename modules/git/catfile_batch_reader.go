@@ -198,7 +198,7 @@ func ParseCatFileTreeLine(objectFormat ObjectFormat, rd BufferedReader) (mode En
 	}
 
 	mode = ParseEntryMode(util.UnsafeBytesToString(bufBytes[:idx]))
-	name = string(bufBytes[idx+1 : len(bufBytes)-1]) // trim the NUL terminator
+	name = string(bufBytes[idx+1 : len(bufBytes)-1]) // trim the NUL terminator, it needs a copy because the bufBytes will be reused by the reader
 	if mode == EntryModeNoEntry {
 		return mode, name, objID, len(bufBytes), errors.New("invalid entry mode: " + string(bufBytes[:idx]))
 	}
