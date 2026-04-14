@@ -179,18 +179,14 @@ headerLoop:
 // Therefore we need some method to convert these binary hashes to hex hashes
 
 // ParseCatFileTreeLine reads an entry from a tree in a cat-file --batch stream
-// This carefully avoids allocations - except where fnameBuf is too small.
-// It is recommended therefore to pass in an fnameBuf large enough to avoid almost all allocations
 //
 // Each line is composed of:
 // <mode-in-ascii-dropping-initial-zeros> SP <fname> NUL <binary HASH>
 //
 // We don't attempt to convert the raw HASH to save a lot of time
-func ParseCatFileTreeLine(objectFormat ObjectFormat, rd BufferedReader, modeBuf, fnameBuf, shaBuf []byte) (mode, fname, sha []byte, n int, err error) {
-	var readBytes []byte
-
-	// Read the Mode & fname
-	readBytes, err = rd.ReadSlice('\x00')
+func ParseCatFileTreeLine(objectFormat ObjectFormat, rd BufferedReader) (mode, fname, sha []byte, n int, err error) {
+	// Read the mode and fname up to and including the NUL separator
+	readBytes, err := rd.ReadBytes('\x00')
 	if err != nil {
 		return mode, fname, sha, n, err
 	}
@@ -200,48 +196,23 @@ func ParseCatFileTreeLine(objectFormat ObjectFormat, rd BufferedReader, modeBuf,
 		return mode, fname, sha, n, &ErrNotExist{}
 	}
 
-	n += idx + 1
-	copy(modeBuf, readBytes[:idx])
-	if len(modeBuf) >= idx {
-		modeBuf = modeBuf[:idx]
-	} else {
-		modeBuf = append(modeBuf, readBytes[len(modeBuf):idx]...)
-	}
-	mode = modeBuf
+	mode = readBytes[:idx]
+	fname = readBytes[idx+1 : len(readBytes)-1] // trim the NUL terminator
+	n = len(readBytes)
 
-	readBytes = readBytes[idx+1:]
-
-	// Deal with the fname
-	copy(fnameBuf, readBytes)
-	if len(fnameBuf) > len(readBytes) {
-		fnameBuf = fnameBuf[:len(readBytes)]
-	} else {
-		fnameBuf = append(fnameBuf, readBytes[len(fnameBuf):]...)
-	}
-	for err == bufio.ErrBufferFull {
-		readBytes, err = rd.ReadSlice('\x00')
-		fnameBuf = append(fnameBuf, readBytes...)
-	}
-	n += len(fnameBuf)
-	if err != nil {
-		return mode, fname, sha, n, err
-	}
-	fnameBuf = fnameBuf[:len(fnameBuf)-1]
-	fname = fnameBuf
-
-	// Deal with the binary hash
-	idx = 0
+	// Read the binary hash
 	length := objectFormat.FullLength() / 2
+	sha = make([]byte, length)
+	idx = 0
 	for idx < length {
 		var read int
-		read, err = rd.Read(shaBuf[idx:length])
+		read, err = rd.Read(sha[idx:length])
 		n += read
 		if err != nil {
 			return mode, fname, sha, n, err
 		}
 		idx += read
 	}
-	sha = shaBuf
 	return mode, fname, sha, n, err
 }
 

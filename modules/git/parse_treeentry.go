@@ -47,14 +47,11 @@ func parseTreeEntries(data []byte, ptree *Tree) ([]*TreeEntry, error) {
 }
 
 func catBatchParseTreeEntries(objectFormat ObjectFormat, ptree *Tree, rd BufferedReader, sz int64) ([]*TreeEntry, error) {
-	fnameBuf := make([]byte, 4096)
-	modeBuf := make([]byte, 40)
-	shaBuf := make([]byte, objectFormat.FullLength())
 	entries := make([]*TreeEntry, 0, 10)
 
 loop:
 	for sz > 0 {
-		mode, fname, sha, count, err := ParseCatFileTreeLine(objectFormat, rd, modeBuf, fnameBuf, shaBuf)
+		mode, fname, sha, count, err := ParseCatFileTreeLine(objectFormat, rd)
 		if err != nil {
 			if err == io.EOF {
 				break loop

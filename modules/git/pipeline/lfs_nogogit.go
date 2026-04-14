@@ -46,10 +46,6 @@ func findLFSFileFunc(repo *git.Repository, objectID git.ObjectID, revListReader 
 	trees := []string{}
 	paths := []string{}
 
-	fnameBuf := make([]byte, 4096)
-	modeBuf := make([]byte, 40)
-	workingShaBuf := make([]byte, objectID.Type().FullLength()/2)
-
 	for scan.Scan() {
 		// Get the next commit ID
 		commitID := scan.Text()
@@ -93,7 +89,7 @@ func findLFSFileFunc(repo *git.Repository, objectID git.ObjectID, revListReader 
 			case "tree":
 				var n int64
 				for n < info.Size {
-					mode, fname, binObjectID, count, err := git.ParseCatFileTreeLine(objectID.Type(), batchReader, modeBuf, fnameBuf, workingShaBuf)
+					mode, fname, binObjectID, count, err := git.ParseCatFileTreeLine(objectID.Type(), batchReader)
 					if err != nil {
 						return nil, err
 					}
