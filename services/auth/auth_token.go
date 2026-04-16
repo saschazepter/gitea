@@ -89,11 +89,7 @@ func CreateAuthTokenForUserID(ctx context.Context, userID int64) (*auth_model.Au
 		ExpiresUnix: timeutil.TimeStampNow().AddDuration(time.Duration(setting.LogInRememberDays*24) * time.Hour),
 	}
 
-	var err error
-	t.ID, err = util.CryptoRandomString(10)
-	if err != nil {
-		return nil, "", err
-	}
+	t.ID = util.CryptoRandomString(10)
 
 	token, hash, err := generateTokenAndHash()
 	if err != nil {
@@ -110,10 +106,7 @@ func CreateAuthTokenForUserID(ctx context.Context, userID int64) (*auth_model.Au
 }
 
 func generateTokenAndHash() (string, string, error) {
-	buf, err := util.CryptoRandomBytes(32)
-	if err != nil {
-		return "", "", err
-	}
+	buf := util.CryptoRandomBytes(32)
 
 	token := hex.EncodeToString(buf)
 
