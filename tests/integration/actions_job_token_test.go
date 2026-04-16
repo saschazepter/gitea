@@ -309,7 +309,7 @@ func TestActionsJobTokenPermissionsWriteIssue(t *testing.T) {
 	repoActionsCfg.MaxTokenPermissions = nil
 	require.NoError(t, repo_model.UpdateRepoUnitConfig(t.Context(), repoActionsUnit))
 
-	require.NoError(t, task.GenerateAndFillToken())
+	task.GenerateAndFillToken()
 	task.Status = actions_model.StatusRunning
 	require.NoError(t, actions_model.UpdateTask(t.Context(), task, "token_hash", "token_salt", "token_last_eight", "status"))
 
@@ -359,7 +359,7 @@ func createActionTask(t *testing.T, repoID int64, isFork bool) *actions_model.Ac
 		Status:            actions_model.StatusRunning,
 		IsForkPullRequest: isFork,
 	}
-	require.NoError(t, task.GenerateAndFillToken())
+	task.GenerateAndFillToken()
 	require.NoError(t, db.Insert(t.Context(), task))
 	return task
 }
