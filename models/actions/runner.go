@@ -171,9 +171,8 @@ func (r *ActionRunner) LoadAttributes(ctx context.Context) error {
 	return nil
 }
 
-func (r *ActionRunner) GenerateToken() error {
+func (r *ActionRunner) GenerateAndFillToken() {
 	r.Token, r.TokenSalt, r.TokenHash, _ = generateSaltedToken()
-	return nil
 }
 
 // CanMatchLabels checks whether the runner's labels can match a job's "runs-on"
