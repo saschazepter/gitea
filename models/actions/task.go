@@ -147,9 +147,9 @@ func (task *ActionTask) LoadAttributes(ctx context.Context) error {
 	return nil
 }
 
-func (task *ActionTask) GenerateToken() (err error) {
-	task.Token, task.TokenSalt, task.TokenHash, task.TokenLastEight, err = generateSaltedToken()
-	return err
+func (task *ActionTask) GenerateToken() error {
+	task.Token, task.TokenSalt, task.TokenHash, task.TokenLastEight = generateSaltedToken()
+	return nil
 }
 
 func GetTaskByID(ctx context.Context, id int64) (*ActionTask, error) {

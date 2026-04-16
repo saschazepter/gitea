@@ -64,10 +64,7 @@ func CheckAuthToken(ctx context.Context, value string) (*auth_model.AuthToken, e
 }
 
 func RegenerateAuthToken(ctx context.Context, t *auth_model.AuthToken) (*auth_model.AuthToken, string, error) {
-	token, hash, err := generateTokenAndHash()
-	if err != nil {
-		return nil, "", err
-	}
+	token, hash := generateTokenAndHash()
 
 	newToken := &auth_model.AuthToken{
 		ID:          t.ID,
@@ -91,10 +88,7 @@ func CreateAuthTokenForUserID(ctx context.Context, userID int64) (*auth_model.Au
 
 	t.ID = util.CryptoRandomString(10)
 
-	token, hash, err := generateTokenAndHash()
-	if err != nil {
-		return nil, "", err
-	}
+	token, hash := generateTokenAndHash()
 
 	t.TokenHash = hash
 
@@ -105,12 +99,12 @@ func CreateAuthTokenForUserID(ctx context.Context, userID int64) (*auth_model.Au
 	return t, token, nil
 }
 
-func generateTokenAndHash() (string, string, error) {
+func generateTokenAndHash() (string, string) {
 	buf := util.CryptoRandomBytes(32)
 
 	token := hex.EncodeToString(buf)
 
 	hashedToken := sha256.Sum256([]byte(token))
 
-	return token, hex.EncodeToString(hashedToken[:]), nil
+	return token, hex.EncodeToString(hashedToken[:])
 }
