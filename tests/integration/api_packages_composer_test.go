@@ -38,8 +38,8 @@ func TestPackageComposer(t *testing.T) {
 	packageLicense := "MIT"
 	packageBin := "./bin/script"
 
-	content := test.WriteZipArchive(map[string][]byte{
-		"composer.json": []byte(`{
+	content := test.WriteZipArchive(map[string]string{
+		"composer.json": `{
 		"name": "` + packageName + `",
 		"description": "` + packageDescription + `",
 		"type": "` + packageType + `",
@@ -52,7 +52,7 @@ func TestPackageComposer(t *testing.T) {
 		"bin": [
 			"` + packageBin + `"
 		]
-	}`),
+	}`,
 	}).Bytes()
 
 	url := fmt.Sprintf("%sapi/packages/%s/composer", setting.AppURL, user.Name)

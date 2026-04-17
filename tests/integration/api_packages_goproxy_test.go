@@ -29,7 +29,7 @@ func TestPackageGo(t *testing.T) {
 	packageVersion2 := "v0.0.2"
 	goModContent := `module "gitea.com/go-gitea/gitea"`
 
-	createArchive := func(files map[string][]byte) []byte {
+	createArchive := func(files map[string]string) []byte {
 		return test.WriteZipArchive(files).Bytes()
 	}
 
@@ -47,8 +47,8 @@ func TestPackageGo(t *testing.T) {
 			AddBasicAuth(user.Name)
 		MakeRequest(t, req, http.StatusBadRequest)
 
-		content = createArchive(map[string][]byte{
-			packageName + "@" + packageVersion + "/go.mod": []byte(goModContent),
+		content = createArchive(map[string]string{
+			packageName + "@" + packageVersion + "/go.mod": goModContent,
 		})
 
 		req = NewRequestWithBody(t, "PUT", url+"/upload", bytes.NewReader(content)).
@@ -81,8 +81,8 @@ func TestPackageGo(t *testing.T) {
 
 		time.Sleep(time.Second) // Ensure the timestamp is different, then the "list" below can have stable order
 
-		content = createArchive(map[string][]byte{
-			packageName + "@" + packageVersion2 + "/go.mod": []byte(goModContent),
+		content = createArchive(map[string]string{
+			packageName + "@" + packageVersion2 + "/go.mod": goModContent,
 		})
 
 		req = NewRequestWithBody(t, "PUT", url+"/upload", bytes.NewReader(content)).

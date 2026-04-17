@@ -155,8 +155,8 @@ func TestPackageNuGet(t *testing.T) {
 	}
 
 	createPackage := func(id, version string) *bytes.Buffer {
-		return test.WriteZipArchive(map[string][]byte{
-			"package.nuspec": []byte(createNuspec(id, version)),
+		return test.WriteZipArchive(map[string]string{
+			"package.nuspec": createNuspec(id, version),
 		})
 	}
 
@@ -379,8 +379,8 @@ func TestPackageNuGet(t *testing.T) {
 				b, _ := base64.StdEncoding.DecodeString(`QlNKQgEAAQAAAAAADAAAAFBEQiB2MS4wAAAAAAAABgB8AAAAWAAAACNQZGIAAAAA1AAAAAgBAAAj
 fgAA3AEAAAQAAAAjU3RyaW5ncwAAAADgAQAABAAAACNVUwDkAQAAMAAAACNHVUlEAAAAFAIAACgB
 AAAjQmxvYgAAAGm7ENm9SGxMtAFVvPUsPJTF6PbtAAAAAFcVogEJAAAAAQAAAA==`)
-				return test.WriteZipArchive(map[string][]byte{
-					"package.nuspec": []byte(`<?xml version="1.0" encoding="utf-8"?>
+				return test.WriteZipArchive(map[string]string{
+					"package.nuspec": `<?xml version="1.0" encoding="utf-8"?>
 				<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
 				<metadata>
 					<id>` + id + `</id>
@@ -389,8 +389,8 @@ AAAjQmxvYgAAAGm7ENm9SGxMtAFVvPUsPJTF6PbtAAAAAFcVogEJAAAAAQAAAA==`)
 					<description>` + packageDescription + `</description>
 					<packageTypes><packageType name="` + packageType + `" /></packageTypes>
 				</metadata>
-				</package>`),
-					symbolFilename: b,
+				</package>`,
+					symbolFilename: string(b),
 				})
 			}
 

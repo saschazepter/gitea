@@ -144,8 +144,8 @@ func TestPackageCran(t *testing.T) {
 	})
 
 	t.Run("Binary", func(t *testing.T) {
-		createArchive := func(filename string, content []byte) *bytes.Buffer {
-			return test.WriteZipArchive(map[string][]byte{
+		createArchive := func(filename string, content string) *bytes.Buffer {
+			return test.WriteZipArchive(map[string]string{
 				filename: content,
 			})
 		}
@@ -160,13 +160,13 @@ func TestPackageCran(t *testing.T) {
 
 			req = NewRequestWithBody(t, "PUT", uploadURL, createArchive(
 				"dummy.txt",
-				[]byte{},
+				"",
 			)).AddBasicAuth(user.Name)
 			MakeRequest(t, req, http.StatusBadRequest)
 
 			req = NewRequestWithBody(t, "PUT", uploadURL+"?platform=&rversion=", createArchive(
 				"package/DESCRIPTION",
-				createDescription(packageName, packageVersion),
+				string(createDescription(packageName, packageVersion)),
 			)).AddBasicAuth(user.Name)
 			MakeRequest(t, req, http.StatusBadRequest)
 
@@ -174,7 +174,7 @@ func TestPackageCran(t *testing.T) {
 
 			req = NewRequestWithBody(t, "PUT", uploadURL, createArchive(
 				"package/DESCRIPTION",
-				createDescription(packageName, packageVersion),
+				string(createDescription(packageName, packageVersion)),
 			)).AddBasicAuth(user.Name)
 			MakeRequest(t, req, http.StatusCreated)
 
@@ -188,7 +188,7 @@ func TestPackageCran(t *testing.T) {
 
 			req = NewRequestWithBody(t, "PUT", uploadURL, createArchive(
 				"package/DESCRIPTION",
-				createDescription(packageName, packageVersion),
+				string(createDescription(packageName, packageVersion)),
 			)).AddBasicAuth(user.Name)
 			MakeRequest(t, req, http.StatusConflict)
 		})

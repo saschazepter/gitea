@@ -98,12 +98,12 @@ func WriteTarArchive(files map[string]string) *bytes.Buffer {
 	return WriteTarCompression(func(w io.Writer) io.WriteCloser { return util.NopCloser{Writer: w} }, files)
 }
 
-func WriteZipArchive(files map[string][]byte) *bytes.Buffer {
+func WriteZipArchive(files map[string]string) *bytes.Buffer {
 	buf := &bytes.Buffer{}
 	zw := zip.NewWriter(buf)
 	for name, content := range files {
 		w, _ := zw.Create(name)
-		_, _ = w.Write(content)
+		_, _ = w.Write([]byte(content))
 	}
 	_ = zw.Close()
 	return buf
