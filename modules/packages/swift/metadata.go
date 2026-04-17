@@ -47,6 +47,7 @@ type Metadata struct {
 	Keywords      []string             `json:"keywords,omitempty"`
 	RepositoryURL string               `json:"repository_url,omitempty"`
 	License       string               `json:"license,omitempty"`
+	LicenseURL    string               `json:"license_url,omitempty"`
 	Author        Person               `json:"author"`
 	Manifests     map[string]*Manifest `json:"manifests,omitempty"`
 }
@@ -67,6 +68,7 @@ type SoftwareSourceCode struct {
 	Keywords            []string            `json:"keywords,omitempty"`
 	CodeRepository      string              `json:"codeRepository,omitempty"`
 	License             string              `json:"license,omitempty"`
+	LicenseURL          string              `json:"licenseURL,omitempty"`
 	Author              *Person             `json:"author,omitempty"`
 	ProgrammingLanguage ProgrammingLanguage `json:"programmingLanguage"`
 	RepositoryURLs      []string            `json:"repositoryURLs,omitempty"`
@@ -184,6 +186,7 @@ func ParsePackage(sr io.ReaderAt, size int64, mr io.Reader) (*Package, error) {
 		p.Metadata.Description = ssc.Description
 		p.Metadata.Keywords = ssc.Keywords
 		p.Metadata.License = ssc.License
+		p.Metadata.LicenseURL = ssc.LicenseURL
 		if ssc.Author != nil {
 			author := Person{
 				Name:       ssc.Author.Name,
@@ -201,6 +204,9 @@ func ParsePackage(sr io.ReaderAt, size int64, mr io.Reader) (*Package, error) {
 		p.Metadata.RepositoryURL = ssc.CodeRepository
 		if !validation.IsValidURL(p.Metadata.RepositoryURL) {
 			p.Metadata.RepositoryURL = ""
+		}
+		if !validation.IsValidURL(p.Metadata.LicenseURL) {
+			p.Metadata.LicenseURL = ""
 		}
 
 		p.RepositoryURLs = ssc.RepositoryURLs

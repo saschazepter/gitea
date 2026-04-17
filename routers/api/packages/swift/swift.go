@@ -237,6 +237,7 @@ func PackageVersionMetadata(ctx *context.Context) {
 			Keywords:       metadata.Keywords,
 			CodeRepository: metadata.RepositoryURL,
 			License:        metadata.License,
+			LicenseURL:     metadata.LicenseURL,
 			Author:         author,
 			ProgrammingLanguage: swift_module.ProgrammingLanguage{
 				Type: "ComputerLanguage",

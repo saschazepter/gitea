@@ -39,6 +39,7 @@ func TestPackageSwift(t *testing.T) {
 	packageAuthor := "KN4CK3R"
 	packageDescription := "Gitea Test Package"
 	packageCodeRepositoryURL := "https://gitea.io/gitea/gitea" // this one is not used as a property, it is meta
+	packageLicenseURL := "https://opensource.org/license/mit"
 	packageRepositoryURL1 := "https://gitea.io/gitea/repo"
 	packageRepositoryURLs := []string{packageRepositoryURL1, "https://gitea.io/gitea/repo.git", "ssh://git@gitea.io/gitea/repo.git"}
 	makePackageMetadataJSON := func(ver string) string {
@@ -47,6 +48,7 @@ func TestPackageSwift(t *testing.T) {
 	"version":"%s",
 	"description":"` + packageDescription + `",
 	"codeRepository":"` + packageCodeRepositoryURL + `",
+	"licenseURL":"` + packageLicenseURL + `",
 	"author":{"givenName":"` + packageAuthor + `"},
 	"repositoryURLs":["` + strings.Join(packageRepositoryURLs, `","`) + `"]
 }`
@@ -345,6 +347,7 @@ func TestPackageSwift(t *testing.T) {
 		assert.Equal(t, packageVersion, result.Metadata.Version)
 		assert.Equal(t, packageDescription, result.Metadata.Description)
 		assert.Equal(t, "Swift", result.Metadata.ProgrammingLanguage.Name)
+		assert.Equal(t, packageLicenseURL, result.Metadata.LicenseURL)
 		require.NotNil(t, result.Metadata.Author)
 		assert.Equal(t, packageAuthor, result.Metadata.Author.Name)
 		assert.Equal(t, packageAuthor, result.Metadata.Author.GivenName)
@@ -389,6 +392,7 @@ func TestPackageSwift(t *testing.T) {
 		assert.Nil(t, result.Metadata.Author)
 		assert.Empty(t, result.Metadata.RepositoryURLs)
 		assert.Empty(t, result.Metadata.CodeRepository)
+		assert.Empty(t, result.Metadata.LicenseURL)
 	})
 
 	t.Run("DownloadManifest", func(t *testing.T) {

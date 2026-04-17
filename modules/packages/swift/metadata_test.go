@@ -19,6 +19,7 @@ const (
 	packageVersion       = "1.0.1"
 	packageDescription   = "Package Description"
 	packageRepositoryURL = "https://gitea.io/gitea/gitea"
+	packageLicenseURL    = "https://opensource.org/license/mit"
 	packageAuthor        = "KN4CK3R"
 	packageLicense       = "MIT"
 )
@@ -71,7 +72,7 @@ func TestParsePackage(t *testing.T) {
 
 		p, err := ParsePackage(
 			bytes.NewReader(data.Bytes()), int64(data.Len()),
-			strings.NewReader(`{"name":"`+packageName+`","version":"`+packageVersion+`","description":"`+packageDescription+`","keywords":["swift","package"],"license":"`+packageLicense+`","codeRepository":"`+packageRepositoryURL+`","author":{"givenName":"`+packageAuthor+`"},"repositoryURLs":["`+packageRepositoryURL+`"]}`),
+			strings.NewReader(`{"name":"`+packageName+`","version":"`+packageVersion+`","description":"`+packageDescription+`","keywords":["swift","package"],"license":"`+packageLicense+`","licenseURL":"`+packageLicenseURL+`","codeRepository":"`+packageRepositoryURL+`","author":{"givenName":"`+packageAuthor+`"},"repositoryURLs":["`+packageRepositoryURL+`"]}`),
 		)
 		assert.NotNil(t, p)
 		assert.NoError(t, err)
@@ -84,6 +85,7 @@ func TestParsePackage(t *testing.T) {
 		assert.Equal(t, packageDescription, p.Metadata.Description)
 		assert.ElementsMatch(t, []string{"swift", "package"}, p.Metadata.Keywords)
 		assert.Equal(t, packageLicense, p.Metadata.License)
+		assert.Equal(t, packageLicenseURL, p.Metadata.LicenseURL)
 		assert.Equal(t, packageAuthor, p.Metadata.Author.Name)
 		assert.Equal(t, packageAuthor, p.Metadata.Author.GivenName)
 		assert.Equal(t, packageRepositoryURL, p.Metadata.RepositoryURL)
