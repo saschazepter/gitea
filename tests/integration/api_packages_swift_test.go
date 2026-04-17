@@ -113,10 +113,6 @@ func TestPackageSwift(t *testing.T) {
 			MakeRequest(t, req, expectedStatus)
 		}
 
-		createArchive := func(files map[string]string) *bytes.Buffer {
-			return test.WriteZipArchive(files)
-		}
-
 		for _, triple := range []string{"/sc_ope/package/1.0.0", "/scope/pack~age/1.0.0", "/scope/package/1_0.0"} {
 			req := NewRequestWithBody(t, "PUT", url+triple, bytes.NewReader([]byte{})).
 				AddBasicAuth(user.Name)
@@ -135,7 +131,7 @@ func TestPackageSwift(t *testing.T) {
 			t,
 			uploadURL,
 			http.StatusCreated,
-			createArchive(map[string]string{
+			test.WriteZipArchive(map[string]string{
 				"Package.swift":           contentManifest1,
 				"Package@swift-5.6.swift": contentManifest2,
 			}),
@@ -170,7 +166,7 @@ func TestPackageSwift(t *testing.T) {
 			t,
 			uploadURL,
 			http.StatusConflict,
-			createArchive(map[string]string{
+			test.WriteZipArchive(map[string]string{
 				"Package.swift": contentManifest1,
 			}),
 			"",
@@ -202,10 +198,6 @@ func TestPackageSwift(t *testing.T) {
 			MakeRequest(t, req, expectedStatus)
 		}
 
-		createArchive := func(files map[string]string) *bytes.Buffer {
-			return test.WriteZipArchive(files)
-		}
-
 		uploadURL := fmt.Sprintf("%s/%s/%s/%s", url, packageScope, packageName, packageVersion2)
 
 		req := NewRequestWithBody(t, "PUT", uploadURL, bytes.NewReader([]byte{}))
@@ -216,7 +208,7 @@ func TestPackageSwift(t *testing.T) {
 			t,
 			uploadURL,
 			http.StatusCreated,
-			createArchive(map[string]string{
+			test.WriteZipArchive(map[string]string{
 				"Package.swift":           contentManifest1,
 				"Package@swift-5.6.swift": contentManifest2,
 			}),
@@ -251,7 +243,7 @@ func TestPackageSwift(t *testing.T) {
 			t,
 			uploadURL,
 			http.StatusConflict,
-			createArchive(map[string]string{
+			test.WriteZipArchive(map[string]string{
 				"Package.swift": contentManifest1,
 			}),
 			"",

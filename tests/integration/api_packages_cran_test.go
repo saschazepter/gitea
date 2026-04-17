@@ -144,12 +144,6 @@ func TestPackageCran(t *testing.T) {
 	})
 
 	t.Run("Binary", func(t *testing.T) {
-		createArchive := func(filename, content string) *bytes.Buffer {
-			return test.WriteZipArchive(map[string]string{
-				filename: content,
-			})
-		}
-
 		t.Run("Upload", func(t *testing.T) {
 			defer tests.PrintCurrentTest(t)()
 
@@ -158,24 +152,21 @@ func TestPackageCran(t *testing.T) {
 			req := NewRequestWithBody(t, "PUT", uploadURL, bytes.NewReader([]byte{}))
 			MakeRequest(t, req, http.StatusUnauthorized)
 
-			req = NewRequestWithBody(t, "PUT", uploadURL, createArchive(
-				"dummy.txt",
-				"",
-			)).AddBasicAuth(user.Name)
+			req = NewRequestWithBody(t, "PUT", uploadURL, test.WriteZipArchive(map[string]string{
+				"dummy.txt": "",
+			})).AddBasicAuth(user.Name)
 			MakeRequest(t, req, http.StatusBadRequest)
 
-			req = NewRequestWithBody(t, "PUT", uploadURL+"?platform=&rversion=", createArchive(
-				"package/DESCRIPTION",
-				string(createDescription(packageName, packageVersion)),
-			)).AddBasicAuth(user.Name)
+			req = NewRequestWithBody(t, "PUT", uploadURL+"?platform=&rversion=", test.WriteZipArchive(map[string]string{
+				"package/DESCRIPTION": string(createDescription(packageName, packageVersion)),
+			})).AddBasicAuth(user.Name)
 			MakeRequest(t, req, http.StatusBadRequest)
 
 			uploadURL += "?platform=windows&rversion=4.2"
 
-			req = NewRequestWithBody(t, "PUT", uploadURL, createArchive(
-				"package/DESCRIPTION",
-				string(createDescription(packageName, packageVersion)),
-			)).AddBasicAuth(user.Name)
+			req = NewRequestWithBody(t, "PUT", uploadURL, test.WriteZipArchive(map[string]string{
+				"package/DESCRIPTION": string(createDescription(packageName, packageVersion)),
+			})).AddBasicAuth(user.Name)
 			MakeRequest(t, req, http.StatusCreated)
 
 			pvs, err := packages.GetVersionsByPackageType(t.Context(), user.ID, packages.TypeCran)
@@ -186,10 +177,9 @@ func TestPackageCran(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Len(t, pfs, 2)
 
-			req = NewRequestWithBody(t, "PUT", uploadURL, createArchive(
-				"package/DESCRIPTION",
-				string(createDescription(packageName, packageVersion)),
-			)).AddBasicAuth(user.Name)
+			req = NewRequestWithBody(t, "PUT", uploadURL, test.WriteZipArchive(map[string]string{
+				"package/DESCRIPTION": string(createDescription(packageName, packageVersion)),
+			})).AddBasicAuth(user.Name)
 			MakeRequest(t, req, http.StatusConflict)
 		})
 
