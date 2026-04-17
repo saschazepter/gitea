@@ -376,7 +376,7 @@ func TestPackageNuGet(t *testing.T) {
 			defer tests.PrintCurrentTest(t)()
 
 			createSymbolPackage := func(id, packageType string) io.Reader {
-				b, _ := base64.StdEncoding.DecodeString(`QlNKQgEAAQAAAAAADAAAAFBEQiB2MS4wAAAAAAAABgB8AAAAWAAAACNQZGIAAAAA1AAAAAgBAAAj
+				symbolData, _ := base64.StdEncoding.DecodeString(`QlNKQgEAAQAAAAAADAAAAFBEQiB2MS4wAAAAAAAABgB8AAAAWAAAACNQZGIAAAAA1AAAAAgBAAAj
 fgAA3AEAAAQAAAAjU3RyaW5ncwAAAADgAQAABAAAACNVUwDkAQAAMAAAACNHVUlEAAAAFAIAACgB
 AAAjQmxvYgAAAGm7ENm9SGxMtAFVvPUsPJTF6PbtAAAAAFcVogEJAAAAAQAAAA==`)
 				return test.WriteZipArchive(map[string]string{
@@ -390,7 +390,7 @@ AAAjQmxvYgAAAGm7ENm9SGxMtAFVvPUsPJTF6PbtAAAAAFcVogEJAAAAAQAAAA==`)
 					<packageTypes><packageType name="` + packageType + `" /></packageTypes>
 				</metadata>
 				</package>`,
-					symbolFilename: string(b),
+					symbolFilename: string(symbolData),
 				})
 			}
 
