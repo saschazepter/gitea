@@ -181,10 +181,6 @@ func ParsePackage(sr io.ReaderAt, size int64, mr io.Reader) (*Package, error) {
 		if err := json.NewDecoder(mr).Decode(&ssc); err != nil {
 			return nil, err
 		}
-		if ssc == nil {
-			return p, nil
-		}
-
 		p.Metadata.Description = ssc.Description
 		p.Metadata.Keywords = ssc.Keywords
 		p.Metadata.License = ssc.License
