@@ -35,9 +35,16 @@ func TestPackageSwift(t *testing.T) {
 	packageID := packageScope + "." + packageName
 	packageVersion := "1.0.3"
 	packageVersion2 := "1.0.4"
+	packageVersion3 := "1.0.5"
 	packageAuthor := "KN4CK3R"
 	packageDescription := "Gitea Test Package"
 	packageRepositoryURL := "https://gitea.io/gitea/gitea"
+	packageRepositoryURLs := []string{
+		packageRepositoryURL,
+		packageRepositoryURL + ".git",
+		"ssh://git@gitea.io/gitea/gitea.git",
+	}
+	packageMetadataJSON := `{"name":"` + packageName + `","version":"%s","description":"` + packageDescription + `","codeRepository":"` + packageRepositoryURL + `","author":{"givenName":"` + packageAuthor + `"},"repositoryURLs":["` + strings.Join(packageRepositoryURLs, `","`) + `"]}`
 	contentManifest1 := "// swift-tools-version:5.7\n//\n//  Package.swift"
 	contentManifest2 := "// swift-tools-version:5.6\n//\n//  Package@swift-5.6.swift"
 
@@ -135,7 +142,7 @@ func TestPackageSwift(t *testing.T) {
 				"Package.swift":           contentManifest1,
 				"Package@swift-5.6.swift": contentManifest2,
 			}),
-			`{"name":"`+packageName+`","version":"`+packageVersion+`","description":"`+packageDescription+`","codeRepository":"`+packageRepositoryURL+`","author":{"givenName":"`+packageAuthor+`"},"repositoryURLs":["`+packageRepositoryURL+`"]}`,
+			fmt.Sprintf(packageMetadataJSON, packageVersion),
 		)
 
 		pvs, err := packages.GetVersionsByPackageType(t.Context(), user.ID, packages.TypeSwift)
@@ -153,7 +160,7 @@ func TestPackageSwift(t *testing.T) {
 		assert.Len(t, metadata.Manifests, 2)
 		assert.Equal(t, contentManifest1, metadata.Manifests[""].Content)
 		assert.Equal(t, contentManifest2, metadata.Manifests["5.6"].Content)
-		assert.Len(t, pd.VersionProperties, 1)
+		assert.Len(t, pd.VersionProperties, 3)
 		assert.Equal(t, packageRepositoryURL, pd.VersionProperties.GetByName(swift_module.PropertyRepositoryURL))
 
 		pfs, err := packages.GetFilesByVersionID(t.Context(), pvs[0].ID)
@@ -212,7 +219,7 @@ func TestPackageSwift(t *testing.T) {
 				"Package.swift":           contentManifest1,
 				"Package@swift-5.6.swift": contentManifest2,
 			}),
-			`{"name":"`+packageName+`","version":"`+packageVersion2+`","description":"`+packageDescription+`","codeRepository":"`+packageRepositoryURL+`","author":{"givenName":"`+packageAuthor+`"},"repositoryURLs":["`+packageRepositoryURL+`"]}`,
+			fmt.Sprintf(packageMetadataJSON, packageVersion2),
 		)
 
 		pvs, err := packages.GetVersionsByPackageType(t.Context(), user.ID, packages.TypeSwift)
@@ -230,7 +237,7 @@ func TestPackageSwift(t *testing.T) {
 		assert.Len(t, metadata.Manifests, 2)
 		assert.Equal(t, contentManifest1, metadata.Manifests[""].Content)
 		assert.Equal(t, contentManifest2, metadata.Manifests["5.6"].Content)
-		assert.Len(t, pd.VersionProperties, 1)
+		assert.Len(t, pd.VersionProperties, 3)
 		assert.Equal(t, packageRepositoryURL, pd.VersionProperties.GetByName(swift_module.PropertyRepositoryURL))
 
 		pfs, err := packages.GetFilesByVersionID(t.Context(), thisPackageVersion.ID)
@@ -330,14 +337,50 @@ func TestPackageSwift(t *testing.T) {
 		assert.Equal(t, packageVersion, result.Metadata.Version)
 		assert.Equal(t, packageDescription, result.Metadata.Description)
 		assert.Equal(t, "Swift", result.Metadata.ProgrammingLanguage.Name)
+		require.NotNil(t, result.Metadata.Author)
 		assert.Equal(t, packageAuthor, result.Metadata.Author.Name)
 		assert.Equal(t, packageAuthor, result.Metadata.Author.GivenName)
+		assert.ElementsMatch(t, packageRepositoryURLs, result.Metadata.RepositoryURLs)
 
 		req = NewRequest(t, "GET", fmt.Sprintf("%s/%s/%s/%s.json", url, packageScope, packageName, packageVersion)).
 			AddBasicAuth(user.Name)
 		resp = MakeRequest(t, req, http.StatusOK)
 
 		assert.Equal(t, body, resp.Body.String())
+	})
+
+	t.Run("UploadEmptyJSONMetadata", func(t *testing.T) {
+		defer tests.PrintCurrentTest(t)()
+
+		uploadURL := fmt.Sprintf("%s/%s/%s/%s", url, packageScope, packageName, packageVersion3)
+		var body bytes.Buffer
+		mpw := multipart.NewWriter(&body)
+
+		part, err := mpw.CreateFormFile("source-archive", "source-archive.zip")
+		require.NoError(t, err)
+		_, err = io.Copy(part, test.WriteZipArchive(map[string]string{
+			"Package.swift":           contentManifest1,
+			"Package@swift-5.6.swift": contentManifest2,
+		}))
+		require.NoError(t, err)
+		require.NoError(t, mpw.WriteField("metadata", "{}"))
+		require.NoError(t, mpw.Close())
+
+		req := NewRequestWithBody(t, "PUT", uploadURL, &body).
+			SetHeader("Content-Type", mpw.FormDataContentType()).
+			SetHeader("Accept", swift_router.AcceptJSON).
+			AddBasicAuth(user.Name)
+		MakeRequest(t, req, http.StatusCreated)
+
+		req = NewRequest(t, "GET", fmt.Sprintf("%s/%s/%s/%s", url, packageScope, packageName, packageVersion3)).
+			AddBasicAuth(user.Name).
+			SetHeader("Accept", swift_router.AcceptJSON)
+		resp := MakeRequest(t, req, http.StatusOK)
+		result := DecodeJSON(t, resp, &swift_router.PackageVersionMetadataResponse{})
+
+		assert.Nil(t, result.Metadata.Author)
+		assert.Empty(t, result.Metadata.RepositoryURLs)
+		assert.Empty(t, result.Metadata.CodeRepository)
 	})
 
 	t.Run("DownloadManifest", func(t *testing.T) {

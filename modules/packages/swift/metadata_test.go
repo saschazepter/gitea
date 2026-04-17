@@ -122,6 +122,23 @@ func TestParsePackage(t *testing.T) {
 		assert.Equal(t, "Doe", p.Metadata.Author.FamilyName)
 	})
 
+	t.Run("WithEmptyJSONMetadata", func(t *testing.T) {
+		data := createArchive(map[string][]byte{
+			"Package.swift": []byte("// swift-tools-version:5.7\n//\n//  Package.swift"),
+		})
+
+		p, err := ParsePackage(
+			data,
+			data.Size(),
+			strings.NewReader(`{}`),
+		)
+		assert.NotNil(t, p)
+		assert.NoError(t, err)
+		assert.NotNil(t, p.Metadata)
+		assert.Empty(t, p.Metadata.Author.Name)
+		assert.Empty(t, p.RepositoryURLs)
+	})
+
 	t.Run("NameFieldGeneration", func(t *testing.T) {
 		data := createArchive(map[string][]byte{
 			"Package.swift": []byte("// swift-tools-version:5.7\n//\n//  Package.swift"),

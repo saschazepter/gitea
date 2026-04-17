@@ -67,7 +67,7 @@ type SoftwareSourceCode struct {
 	Keywords            []string            `json:"keywords,omitempty"`
 	CodeRepository      string              `json:"codeRepository,omitempty"`
 	License             string              `json:"license,omitempty"`
-	Author              Person              `json:"author"`
+	Author              *Person             `json:"author,omitempty"`
 	ProgrammingLanguage ProgrammingLanguage `json:"programmingLanguage"`
 	RepositoryURLs      []string            `json:"repositoryURLs,omitempty"`
 }
@@ -181,21 +181,26 @@ func ParsePackage(sr io.ReaderAt, size int64, mr io.Reader) (*Package, error) {
 		if err := json.NewDecoder(mr).Decode(&ssc); err != nil {
 			return nil, err
 		}
+		if ssc == nil {
+			return p, nil
+		}
 
 		p.Metadata.Description = ssc.Description
 		p.Metadata.Keywords = ssc.Keywords
 		p.Metadata.License = ssc.License
-		author := Person{
-			Name:       ssc.Author.Name,
-			GivenName:  ssc.Author.GivenName,
-			MiddleName: ssc.Author.MiddleName,
-			FamilyName: ssc.Author.FamilyName,
+		if ssc.Author != nil {
+			author := Person{
+				Name:       ssc.Author.Name,
+				GivenName:  ssc.Author.GivenName,
+				MiddleName: ssc.Author.MiddleName,
+				FamilyName: ssc.Author.FamilyName,
+			}
+			// If Name is not provided, generate it from individual name components
+			if author.Name == "" {
+				author.Name = author.String()
+			}
+			p.Metadata.Author = author
 		}
-		// If Name is not provided, generate it from individual name components
-		if author.Name == "" {
-			author.Name = author.String()
-		}
-		p.Metadata.Author = author
 
 		p.Metadata.RepositoryURL = ssc.CodeRepository
 		if !validation.IsValidURL(p.Metadata.RepositoryURL) {
