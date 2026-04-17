@@ -158,6 +158,10 @@ func uploadConanPackageV1(t *testing.T, baseURL, token, name, version, user, cha
 }
 
 func uploadConanPackageV2(t *testing.T, baseURL, token, name, version, user, channel, recipeRevision, packageRevision string) {
+	type fileList struct {
+		Files map[string]any `json:"files"`
+	}
+
 	contentConanfile := buildConanfileContent(name, version)
 
 	recipeURL := fmt.Sprintf("%s/v2/conans/%s/%s/%s/%s/revisions/%s", baseURL, name, version, user, channel, recipeRevision)
@@ -170,9 +174,7 @@ func uploadConanPackageV2(t *testing.T, baseURL, token, name, version, user, cha
 		AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusOK)
 
-	list := DecodeJSON(t, resp, &struct {
-		Files map[string]any `json:"files"`
-	}{})
+	list := DecodeJSON(t, resp, &fileList{})
 	assert.Len(t, list.Files, 1)
 	assert.Contains(t, list.Files, conanfileName)
 
@@ -190,9 +192,7 @@ func uploadConanPackageV2(t *testing.T, baseURL, token, name, version, user, cha
 		AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
 
-	list = DecodeJSON(t, resp, &struct {
-		Files map[string]any `json:"files"`
-	}{})
+	list = DecodeJSON(t, resp, &fileList{})
 	assert.Len(t, list.Files, 1)
 	assert.Contains(t, list.Files, conaninfoName)
 }
