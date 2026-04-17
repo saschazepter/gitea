@@ -114,11 +114,7 @@ func TestPackageSwift(t *testing.T) {
 		}
 
 		createArchive := func(files map[string]string) *bytes.Buffer {
-			zipFiles := make(map[string][]byte, len(files))
-			for filename, content := range files {
-				zipFiles[filename] = []byte(content)
-			}
-			return test.WriteZipArchive(zipFiles)
+			return test.WriteZipArchive(files)
 		}
 
 		for _, triple := range []string{"/sc_ope/package/1.0.0", "/scope/pack~age/1.0.0", "/scope/package/1_0.0"} {
@@ -207,11 +203,7 @@ func TestPackageSwift(t *testing.T) {
 		}
 
 		createArchive := func(files map[string]string) *bytes.Buffer {
-			zipFiles := make(map[string][]byte, len(files))
-			for filename, content := range files {
-				zipFiles[filename] = []byte(content)
-			}
-			return test.WriteZipArchive(zipFiles)
+			return test.WriteZipArchive(files)
 		}
 
 		uploadURL := fmt.Sprintf("%s/%s/%s/%s", url, packageScope, packageName, packageVersion2)
@@ -301,8 +293,7 @@ func TestPackageSwift(t *testing.T) {
 
 		body := resp.Body.String()
 
-		var result *swift_router.EnumeratePackageVersionsResponse
-		DecodeJSON(t, resp, &result)
+		result := DecodeJSON(t, resp, &swift_router.EnumeratePackageVersionsResponse{})
 
 		assert.Len(t, result.Releases, 2)
 		assert.Contains(t, result.Releases, packageVersion2)
@@ -327,8 +318,7 @@ func TestPackageSwift(t *testing.T) {
 
 		body := resp.Body.String()
 
-		var result *swift_router.PackageVersionMetadataResponse
-		DecodeJSON(t, resp, &result)
+		result := DecodeJSON(t, resp, &swift_router.PackageVersionMetadataResponse{})
 
 		pv, err := packages.GetVersionByNameAndVersion(t.Context(), user.ID, packages.TypeSwift, packageID, packageVersion)
 		assert.NotNil(t, pv)
@@ -419,8 +409,7 @@ func TestPackageSwift(t *testing.T) {
 			SetHeader("Accept", swift_router.AcceptJSON)
 		resp = MakeRequest(t, req, http.StatusOK)
 
-		var result *swift_router.LookupPackageIdentifiersResponse
-		DecodeJSON(t, resp, &result)
+		result := DecodeJSON(t, resp, &swift_router.LookupPackageIdentifiersResponse{})
 
 		assert.Len(t, result.Identifiers, 1)
 		assert.Equal(t, packageID, result.Identifiers[0])

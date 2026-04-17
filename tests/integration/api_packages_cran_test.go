@@ -144,7 +144,7 @@ func TestPackageCran(t *testing.T) {
 	})
 
 	t.Run("Binary", func(t *testing.T) {
-		createArchive := func(filename string, content string) *bytes.Buffer {
+		createArchive := func(filename, content string) *bytes.Buffer {
 			return test.WriteZipArchive(map[string]string{
 				filename: content,
 			})

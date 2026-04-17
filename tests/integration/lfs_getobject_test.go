@@ -162,8 +162,8 @@ func TestGetLFSZip(t *testing.T) {
 	for i := range b {
 		b[i] = byte(i % 256)
 	}
-	content := test.WriteZipArchive(map[string][]byte{
-		"default": b,
+	content := test.WriteZipArchive(map[string]string{
+		"default": string(b),
 	}).Bytes()
 
 	resp := storeAndGetLfs(t, &content, nil, http.StatusOK)

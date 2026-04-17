@@ -94,8 +94,8 @@ func TestPackageConda(t *testing.T) {
 			io.Copy(zsw, bytes.NewReader(tarContent))
 			zsw.Close()
 
-			buf := test.WriteZipArchive(map[string][]byte{
-				"info-x.tar.zst": infoBuf.Bytes(),
+			buf := test.WriteZipArchive(map[string]string{
+				"info-x.tar.zst": infoBuf.String(),
 			})
 
 			fullName := channel + "/" + packageName

@@ -170,10 +170,9 @@ func uploadConanPackageV2(t *testing.T, baseURL, token, name, version, user, cha
 		AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusOK)
 
-	var list *struct {
+	list := DecodeJSON(t, resp, &struct {
 		Files map[string]any `json:"files"`
-	}
-	DecodeJSON(t, resp, &list)
+	}{})
 	assert.Len(t, list.Files, 1)
 	assert.Contains(t, list.Files, conanfileName)
 
@@ -191,8 +190,9 @@ func uploadConanPackageV2(t *testing.T, baseURL, token, name, version, user, cha
 		AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
 
-	list = nil
-	DecodeJSON(t, resp, &list)
+	list = DecodeJSON(t, resp, &struct {
+		Files map[string]any `json:"files"`
+	}{})
 	assert.Len(t, list.Files, 1)
 	assert.Contains(t, list.Files, conaninfoName)
 }
@@ -458,8 +458,7 @@ func TestPackageConan(t *testing.T) {
 					req := NewRequest(t, "GET", fmt.Sprintf("%s/v1/conans/search?q=%s", url, stdurl.QueryEscape(c.Query)))
 					resp := MakeRequest(t, req, http.StatusOK)
 
-					var result *conan_router.SearchResult
-					DecodeJSON(t, resp, &result)
+					result := DecodeJSON(t, resp, &conan_router.SearchResult{})
 
 					assert.ElementsMatch(t, c.Expected, result.Results, "case %d: unexpected result", i)
 				}
@@ -702,8 +701,7 @@ func TestPackageConan(t *testing.T) {
 				Revisions []*RevisionInfo `json:"revisions"`
 			}
 
-			var list *RevisionList
-			DecodeJSON(t, resp, &list)
+			list := DecodeJSON(t, resp, &RevisionList{})
 			assert.Len(t, list.Revisions, 2)
 			revs := make([]string, 0, len(list.Revisions))
 			for _, rev := range list.Revisions {
@@ -714,7 +712,7 @@ func TestPackageConan(t *testing.T) {
 			req = NewRequest(t, "GET", fmt.Sprintf("%s/%s/packages/%s/revisions", recipeURL, revision1, conanPackageReference))
 			resp = MakeRequest(t, req, http.StatusOK)
 
-			DecodeJSON(t, resp, &list)
+			list = DecodeJSON(t, resp, &RevisionList{})
 			assert.Len(t, list.Revisions, 2)
 			revs = make([]string, 0, len(list.Revisions))
 			for _, rev := range list.Revisions {
@@ -754,8 +752,7 @@ func TestPackageConan(t *testing.T) {
 					req := NewRequest(t, "GET", fmt.Sprintf("%s/v2/conans/search?q=%s", url, stdurl.QueryEscape(c.Query)))
 					resp := MakeRequest(t, req, http.StatusOK)
 
-					var result *conan_router.SearchResult
-					DecodeJSON(t, resp, &result)
+					result := DecodeJSON(t, resp, &conan_router.SearchResult{})
 
 					assert.ElementsMatch(t, c.Expected, result.Results, "case %d: unexpected result", i)
 				}
