@@ -40,7 +40,15 @@ func TestPackageSwift(t *testing.T) {
 	packageDescription := "Gitea Test Package"
 	packageCodeRepositoryURL := "https://gitea.io/gitea/gitea"
 	packageRepositoryURLs := []string{"https://gitea.io/gitea/repo", "https://gitea.io/gitea/repo.git", "ssh://git@gitea.io/gitea/repo.git"}
-	packageMetadataJSON := `{"name":"` + packageName + `","version":"%s","description":"` + packageDescription + `","codeRepository":"` + packageCodeRepositoryURL + `","author":{"givenName":"` + packageAuthor + `"},"repositoryURLs":["` + strings.Join(packageRepositoryURLs, `","`) + `"]}`
+	packageMetadataJSON := `{
+	"name":"` + packageName + `",
+	"version":"%s",
+	"description":"` + packageDescription + `",
+	"codeRepository":"` + packageCodeRepositoryURL + `",
+	"author":{"givenName":"` + packageAuthor + `"},
+	"repositoryURLs":["` + strings.Join(packageRepositoryURLs, `","`) + `"]
+}`
+
 	contentManifest1 := "// swift-tools-version:5.7\n//\n//  Package.swift"
 	contentManifest2 := "// swift-tools-version:5.6\n//\n//  Package@swift-5.6.swift"
 
