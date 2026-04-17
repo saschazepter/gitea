@@ -38,8 +38,9 @@ func TestPackageSwift(t *testing.T) {
 	packageVersion3 := "1.0.5"
 	packageAuthor := "KN4CK3R"
 	packageDescription := "Gitea Test Package"
-	packageCodeRepositoryURL := "https://gitea.io/gitea/gitea"
-	packageRepositoryURLs := []string{"https://gitea.io/gitea/repo", "https://gitea.io/gitea/repo.git", "ssh://git@gitea.io/gitea/repo.git"}
+	packageCodeRepositoryURL := "https://gitea.io/gitea/gitea" // this one is not used as a property, it is meta
+	packageRepositoryURL1 := "https://gitea.io/gitea/repo"
+	packageRepositoryURLs := []string{packageRepositoryURL1, "https://gitea.io/gitea/repo.git", "ssh://git@gitea.io/gitea/repo.git"}
 	makePackageMetadataJSON := func(ver string) string {
 		tmpl := `{
 	"name":"` + packageName + `",
@@ -168,7 +169,7 @@ func TestPackageSwift(t *testing.T) {
 		assert.Equal(t, contentManifest1, metadata.Manifests[""].Content)
 		assert.Equal(t, contentManifest2, metadata.Manifests["5.6"].Content)
 		assert.Len(t, pd.VersionProperties, 3)
-		assert.Equal(t, packageCodeRepositoryURL, pd.VersionProperties.GetByName(swift_module.PropertyRepositoryURL))
+		assert.Equal(t, packageRepositoryURL1, pd.VersionProperties.GetByName(swift_module.PropertyRepositoryURL))
 
 		pfs, err := packages.GetFilesByVersionID(t.Context(), pvs[0].ID)
 		assert.NoError(t, err)
@@ -245,7 +246,7 @@ func TestPackageSwift(t *testing.T) {
 		assert.Equal(t, contentManifest1, metadata.Manifests[""].Content)
 		assert.Equal(t, contentManifest2, metadata.Manifests["5.6"].Content)
 		assert.Len(t, pd.VersionProperties, 3)
-		assert.Equal(t, packageCodeRepositoryURL, pd.VersionProperties.GetByName(swift_module.PropertyRepositoryURL))
+		assert.Equal(t, packageRepositoryURL1, pd.VersionProperties.GetByName(swift_module.PropertyRepositoryURL))
 
 		pfs, err := packages.GetFilesByVersionID(t.Context(), thisPackageVersion.ID)
 		assert.NoError(t, err)
@@ -447,7 +448,7 @@ func TestPackageSwift(t *testing.T) {
 		req = NewRequest(t, "GET", url+"/identifiers?url=https://unknown.host/")
 		MakeRequest(t, req, http.StatusNotFound)
 
-		req = NewRequest(t, "GET", url+"/identifiers?url="+packageCodeRepositoryURL).
+		req = NewRequest(t, "GET", url+"/identifiers?url="+packageRepositoryURL1).
 			SetHeader("Accept", swift_router.AcceptJSON)
 		resp = MakeRequest(t, req, http.StatusOK)
 

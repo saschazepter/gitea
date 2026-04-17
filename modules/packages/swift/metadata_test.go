@@ -4,10 +4,11 @@
 package swift
 
 import (
-	"archive/zip"
 	"bytes"
 	"strings"
 	"testing"
+
+	"code.gitea.io/gitea/modules/test"
 
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
@@ -23,31 +24,18 @@ const (
 )
 
 func TestParsePackage(t *testing.T) {
-	createArchive := func(files map[string][]byte) *bytes.Reader {
-		var buf bytes.Buffer
-		zw := zip.NewWriter(&buf)
-		for filename, content := range files {
-			w, _ := zw.Create(filename)
-			w.Write(content)
-		}
-		zw.Close()
-		return bytes.NewReader(buf.Bytes())
-	}
-
 	t.Run("MissingManifestFile", func(t *testing.T) {
-		data := createArchive(map[string][]byte{"dummy.txt": {}})
-
-		p, err := ParsePackage(data, data.Size(), nil)
+		data := test.WriteZipArchive(map[string]string{"dummy.txt": ""})
+		p, err := ParsePackage(bytes.NewReader(data.Bytes()), int64(data.Len()), nil)
 		assert.Nil(t, p)
 		assert.ErrorIs(t, err, ErrMissingManifestFile)
 	})
 
 	t.Run("ManifestFileTooLarge", func(t *testing.T) {
-		data := createArchive(map[string][]byte{
-			"Package.swift": make([]byte, maxManifestFileSize+1),
+		data := test.WriteZipArchive(map[string]string{
+			"Package.swift": strings.Repeat("a", maxManifestFileSize+1),
 		})
-
-		p, err := ParsePackage(data, data.Size(), nil)
+		p, err := ParsePackage(bytes.NewReader(data.Bytes()), int64(data.Len()), nil)
 		assert.Nil(t, p)
 		assert.ErrorIs(t, err, ErrManifestFileTooLarge)
 	})
@@ -56,12 +44,12 @@ func TestParsePackage(t *testing.T) {
 		content1 := "// swift-tools-version:5.7\n//\n//  Package.swift"
 		content2 := "// swift-tools-version:5.6\n//\n//  Package@swift-5.6.swift"
 
-		data := createArchive(map[string][]byte{
-			"Package.swift":           []byte(content1),
-			"Package@swift-5.5.swift": []byte(content2),
+		data := test.WriteZipArchive(map[string]string{
+			"Package.swift":           content1,
+			"Package@swift-5.5.swift": content2,
 		})
 
-		p, err := ParsePackage(data, data.Size(), nil)
+		p, err := ParsePackage(bytes.NewReader(data.Bytes()), int64(data.Len()), nil)
 		assert.NotNil(t, p)
 		assert.NoError(t, err)
 
@@ -77,13 +65,12 @@ func TestParsePackage(t *testing.T) {
 	})
 
 	t.Run("WithMetadata", func(t *testing.T) {
-		data := createArchive(map[string][]byte{
-			"Package.swift": []byte("// swift-tools-version:5.7\n//\n//  Package.swift"),
+		data := test.WriteZipArchive(map[string]string{
+			"Package.swift": "// swift-tools-version:5.7\n//\n//  Package.swift",
 		})
 
 		p, err := ParsePackage(
-			data,
-			data.Size(),
+			bytes.NewReader(data.Bytes()), int64(data.Len()),
 			strings.NewReader(`{"name":"`+packageName+`","version":"`+packageVersion+`","description":"`+packageDescription+`","keywords":["swift","package"],"license":"`+packageLicense+`","codeRepository":"`+packageRepositoryURL+`","author":{"givenName":"`+packageAuthor+`"},"repositoryURLs":["`+packageRepositoryURL+`"]}`),
 		)
 		assert.NotNil(t, p)
@@ -104,14 +91,13 @@ func TestParsePackage(t *testing.T) {
 	})
 
 	t.Run("WithExplicitNameField", func(t *testing.T) {
-		data := createArchive(map[string][]byte{
-			"Package.swift": []byte("// swift-tools-version:5.7\n//\n//  Package.swift"),
+		data := test.WriteZipArchive(map[string]string{
+			"Package.swift": "// swift-tools-version:5.7\n//\n//  Package.swift",
 		})
 
 		authorName := "John Doe"
 		p, err := ParsePackage(
-			data,
-			data.Size(),
+			bytes.NewReader(data.Bytes()), int64(data.Len()),
 			strings.NewReader(`{"name":"`+packageName+`","version":"`+packageVersion+`","description":"`+packageDescription+`","author":{"name":"`+authorName+`","givenName":"John","familyName":"Doe"}}`),
 		)
 		assert.NotNil(t, p)
@@ -123,13 +109,12 @@ func TestParsePackage(t *testing.T) {
 	})
 
 	t.Run("WithEmptyJSONMetadata", func(t *testing.T) {
-		data := createArchive(map[string][]byte{
-			"Package.swift": []byte("// swift-tools-version:5.7\n//\n//  Package.swift"),
+		data := test.WriteZipArchive(map[string]string{
+			"Package.swift": "// swift-tools-version:5.7\n//\n//  Package.swift",
 		})
 
 		p, err := ParsePackage(
-			data,
-			data.Size(),
+			bytes.NewReader(data.Bytes()), int64(data.Len()),
 			strings.NewReader(`{}`),
 		)
 		assert.NotNil(t, p)
@@ -140,14 +125,13 @@ func TestParsePackage(t *testing.T) {
 	})
 
 	t.Run("NameFieldGeneration", func(t *testing.T) {
-		data := createArchive(map[string][]byte{
-			"Package.swift": []byte("// swift-tools-version:5.7\n//\n//  Package.swift"),
+		data := test.WriteZipArchive(map[string]string{
+			"Package.swift": "// swift-tools-version:5.7\n//\n//  Package.swift",
 		})
 
 		// Test with only individual name components - Name should be auto-generated
 		p, err := ParsePackage(
-			data,
-			data.Size(),
+			bytes.NewReader(data.Bytes()), int64(data.Len()),
 			strings.NewReader(`{"author":{"givenName":"John","middleName":"Q","familyName":"Doe"}}`),
 		)
 		assert.NotNil(t, p)
