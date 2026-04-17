@@ -5,7 +5,6 @@ package integration
 
 import (
 	"archive/tar"
-	"archive/zip"
 	"bytes"
 	"compress/gzip"
 	"fmt"
@@ -16,6 +15,7 @@ import (
 	"code.gitea.io/gitea/models/unittest"
 	user_model "code.gitea.io/gitea/models/user"
 	cran_module "code.gitea.io/gitea/modules/packages/cran"
+	"code.gitea.io/gitea/modules/test"
 	"code.gitea.io/gitea/tests"
 
 	"github.com/stretchr/testify/assert"
@@ -145,12 +145,9 @@ func TestPackageCran(t *testing.T) {
 
 	t.Run("Binary", func(t *testing.T) {
 		createArchive := func(filename string, content []byte) *bytes.Buffer {
-			var buf bytes.Buffer
-			archive := zip.NewWriter(&buf)
-			w, _ := archive.Create(filename)
-			w.Write(content)
-			archive.Close()
-			return &buf
+			return test.WriteZipArchive(map[string][]byte{
+				filename: content,
+			})
 		}
 
 		t.Run("Upload", func(t *testing.T) {

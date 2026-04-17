@@ -4,7 +4,6 @@
 package integration
 
 import (
-	"archive/zip"
 	"bytes"
 	"io"
 	"net/http"
@@ -17,6 +16,7 @@ import (
 	"code.gitea.io/gitea/modules/json"
 	"code.gitea.io/gitea/modules/lfs"
 	"code.gitea.io/gitea/modules/setting"
+	"code.gitea.io/gitea/modules/test"
 	"code.gitea.io/gitea/routers/web"
 	"code.gitea.io/gitea/tests"
 
@@ -162,13 +162,9 @@ func TestGetLFSZip(t *testing.T) {
 	for i := range b {
 		b[i] = byte(i % 256)
 	}
-	outputBuffer := bytes.NewBuffer([]byte{})
-	zipWriter := zip.NewWriter(outputBuffer)
-	fileWriter, err := zipWriter.Create("default")
-	assert.NoError(t, err)
-	fileWriter.Write(b)
-	zipWriter.Close()
-	content := outputBuffer.Bytes()
+	content := test.WriteZipArchive(map[string][]byte{
+		"default": b,
+	}).Bytes()
 
 	resp := storeAndGetLfs(t, &content, nil, http.StatusOK)
 	checkResponseTestContentEncoding(t, &content, resp, false)

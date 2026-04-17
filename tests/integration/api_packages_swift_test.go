@@ -4,7 +4,6 @@
 package integration
 
 import (
-	"archive/zip"
 	"bytes"
 	"fmt"
 	"io"
@@ -18,6 +17,7 @@ import (
 	user_model "code.gitea.io/gitea/models/user"
 	swift_module "code.gitea.io/gitea/modules/packages/swift"
 	"code.gitea.io/gitea/modules/setting"
+	"code.gitea.io/gitea/modules/test"
 	swift_router "code.gitea.io/gitea/routers/api/packages/swift"
 	"code.gitea.io/gitea/tests"
 
@@ -114,14 +114,11 @@ func TestPackageSwift(t *testing.T) {
 		}
 
 		createArchive := func(files map[string]string) *bytes.Buffer {
-			var buf bytes.Buffer
-			zw := zip.NewWriter(&buf)
+			zipFiles := make(map[string][]byte, len(files))
 			for filename, content := range files {
-				w, _ := zw.Create(filename)
-				w.Write([]byte(content))
+				zipFiles[filename] = []byte(content)
 			}
-			zw.Close()
-			return &buf
+			return test.WriteZipArchive(zipFiles)
 		}
 
 		for _, triple := range []string{"/sc_ope/package/1.0.0", "/scope/pack~age/1.0.0", "/scope/package/1_0.0"} {
@@ -210,14 +207,11 @@ func TestPackageSwift(t *testing.T) {
 		}
 
 		createArchive := func(files map[string]string) *bytes.Buffer {
-			var buf bytes.Buffer
-			zw := zip.NewWriter(&buf)
+			zipFiles := make(map[string][]byte, len(files))
 			for filename, content := range files {
-				w, _ := zw.Create(filename)
-				w.Write([]byte(content))
+				zipFiles[filename] = []byte(content)
 			}
-			zw.Close()
-			return &buf
+			return test.WriteZipArchive(zipFiles)
 		}
 
 		uploadURL := fmt.Sprintf("%s/%s/%s/%s", url, packageScope, packageName, packageVersion2)

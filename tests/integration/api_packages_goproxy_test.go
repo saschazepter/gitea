@@ -4,7 +4,6 @@
 package integration
 
 import (
-	"archive/zip"
 	"bytes"
 	"fmt"
 	"net/http"
@@ -14,6 +13,7 @@ import (
 	"code.gitea.io/gitea/models/packages"
 	"code.gitea.io/gitea/models/unittest"
 	user_model "code.gitea.io/gitea/models/user"
+	"code.gitea.io/gitea/modules/test"
 	"code.gitea.io/gitea/tests"
 
 	"github.com/stretchr/testify/assert"
@@ -30,14 +30,7 @@ func TestPackageGo(t *testing.T) {
 	goModContent := `module "gitea.com/go-gitea/gitea"`
 
 	createArchive := func(files map[string][]byte) []byte {
-		var buf bytes.Buffer
-		zw := zip.NewWriter(&buf)
-		for name, content := range files {
-			w, _ := zw.Create(name)
-			w.Write(content)
-		}
-		zw.Close()
-		return buf.Bytes()
+		return test.WriteZipArchive(files).Bytes()
 	}
 
 	url := fmt.Sprintf("/api/packages/%s/go", user.Name)
