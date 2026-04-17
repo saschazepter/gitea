@@ -40,7 +40,8 @@ func TestPackageSwift(t *testing.T) {
 	packageDescription := "Gitea Test Package"
 	packageCodeRepositoryURL := "https://gitea.io/gitea/gitea"
 	packageRepositoryURLs := []string{"https://gitea.io/gitea/repo", "https://gitea.io/gitea/repo.git", "ssh://git@gitea.io/gitea/repo.git"}
-	packageMetadataJSON := `{
+	makePackageMetadataJSON := func(ver string) string {
+		tmpl := `{
 	"name":"` + packageName + `",
 	"version":"%s",
 	"description":"` + packageDescription + `",
@@ -48,6 +49,8 @@ func TestPackageSwift(t *testing.T) {
 	"author":{"givenName":"` + packageAuthor + `"},
 	"repositoryURLs":["` + strings.Join(packageRepositoryURLs, `","`) + `"]
 }`
+		return fmt.Sprintf(tmpl, ver)
+	}
 
 	contentManifest1 := "// swift-tools-version:5.7\n//\n//  Package.swift"
 	contentManifest2 := "// swift-tools-version:5.6\n//\n//  Package@swift-5.6.swift"
@@ -146,7 +149,7 @@ func TestPackageSwift(t *testing.T) {
 				"Package.swift":           contentManifest1,
 				"Package@swift-5.6.swift": contentManifest2,
 			}),
-			fmt.Sprintf(packageMetadataJSON, packageVersion),
+			makePackageMetadataJSON(packageVersion),
 		)
 
 		pvs, err := packages.GetVersionsByPackageType(t.Context(), user.ID, packages.TypeSwift)
@@ -223,7 +226,7 @@ func TestPackageSwift(t *testing.T) {
 				"Package.swift":           contentManifest1,
 				"Package@swift-5.6.swift": contentManifest2,
 			}),
-			fmt.Sprintf(packageMetadataJSON, packageVersion2),
+			makePackageMetadataJSON(packageVersion2),
 		)
 
 		pvs, err := packages.GetVersionsByPackageType(t.Context(), user.ID, packages.TypeSwift)
