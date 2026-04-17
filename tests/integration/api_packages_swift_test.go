@@ -38,13 +38,9 @@ func TestPackageSwift(t *testing.T) {
 	packageVersion3 := "1.0.5"
 	packageAuthor := "KN4CK3R"
 	packageDescription := "Gitea Test Package"
-	packageRepositoryURL := "https://gitea.io/gitea/gitea"
-	packageRepositoryURLs := []string{
-		packageRepositoryURL,
-		packageRepositoryURL + ".git",
-		"ssh://git@gitea.io/gitea/gitea.git",
-	}
-	packageMetadataJSON := `{"name":"` + packageName + `","version":"%s","description":"` + packageDescription + `","codeRepository":"` + packageRepositoryURL + `","author":{"givenName":"` + packageAuthor + `"},"repositoryURLs":["` + strings.Join(packageRepositoryURLs, `","`) + `"]}`
+	packageCodeRepositoryURL := "https://gitea.io/gitea/gitea"
+	packageRepositoryURLs := []string{"https://gitea.io/gitea/repo", "https://gitea.io/gitea/repo.git", "ssh://git@gitea.io/gitea/repo.git"}
+	packageMetadataJSON := `{"name":"` + packageName + `","version":"%s","description":"` + packageDescription + `","codeRepository":"` + packageCodeRepositoryURL + `","author":{"givenName":"` + packageAuthor + `"},"repositoryURLs":["` + strings.Join(packageRepositoryURLs, `","`) + `"]}`
 	contentManifest1 := "// swift-tools-version:5.7\n//\n//  Package.swift"
 	contentManifest2 := "// swift-tools-version:5.6\n//\n//  Package@swift-5.6.swift"
 
@@ -161,7 +157,7 @@ func TestPackageSwift(t *testing.T) {
 		assert.Equal(t, contentManifest1, metadata.Manifests[""].Content)
 		assert.Equal(t, contentManifest2, metadata.Manifests["5.6"].Content)
 		assert.Len(t, pd.VersionProperties, 3)
-		assert.Equal(t, packageRepositoryURL, pd.VersionProperties.GetByName(swift_module.PropertyRepositoryURL))
+		assert.Equal(t, packageCodeRepositoryURL, pd.VersionProperties.GetByName(swift_module.PropertyRepositoryURL))
 
 		pfs, err := packages.GetFilesByVersionID(t.Context(), pvs[0].ID)
 		assert.NoError(t, err)
@@ -238,7 +234,7 @@ func TestPackageSwift(t *testing.T) {
 		assert.Equal(t, contentManifest1, metadata.Manifests[""].Content)
 		assert.Equal(t, contentManifest2, metadata.Manifests["5.6"].Content)
 		assert.Len(t, pd.VersionProperties, 3)
-		assert.Equal(t, packageRepositoryURL, pd.VersionProperties.GetByName(swift_module.PropertyRepositoryURL))
+		assert.Equal(t, packageCodeRepositoryURL, pd.VersionProperties.GetByName(swift_module.PropertyRepositoryURL))
 
 		pfs, err := packages.GetFilesByVersionID(t.Context(), thisPackageVersion.ID)
 		assert.NoError(t, err)
@@ -440,7 +436,7 @@ func TestPackageSwift(t *testing.T) {
 		req = NewRequest(t, "GET", url+"/identifiers?url=https://unknown.host/")
 		MakeRequest(t, req, http.StatusNotFound)
 
-		req = NewRequest(t, "GET", url+"/identifiers?url="+packageRepositoryURL).
+		req = NewRequest(t, "GET", url+"/identifiers?url="+packageCodeRepositoryURL).
 			SetHeader("Accept", swift_router.AcceptJSON)
 		resp = MakeRequest(t, req, http.StatusOK)
 
