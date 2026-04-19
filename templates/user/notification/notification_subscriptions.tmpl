@@ -11,7 +11,7 @@
 		</div>
 		<div class="ui top attached segment">
 			{{if eq .Status 1}}
-				<div class="tw-flex tw-justify-between">
+				<div class="flex-left-right">
 					<div class="tw-flex">
 						<div class="small-menu-items ui compact tiny menu">
 							<a class="{{if eq .State "all"}}active {{end}}item" href="?sort={{$.SortType}}&state=all&issueType={{$.IssueType}}&labels={{$.Labels}}">
@@ -27,7 +27,7 @@
 							</a>
 						</div>
 					</div>
-					<div class="tw-flex tw-justify-between">
+					<div>
 						<div class="ui secondary filter menu labels">
 							<!-- Type -->
 								<div class="ui dropdown type jump item">
