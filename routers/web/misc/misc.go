@@ -28,35 +28,14 @@ func SiteManifest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	type manifestIcon struct {
-		Src   string `json:"src"`
-		Type  string `json:"type"`
-		Sizes string `json:"sizes"`
-	}
-
-	type manifestJSON struct {
-		Name      string         `json:"name"`
-		ShortName string         `json:"short_name"`
-		StartURL  string         `json:"start_url"`
-		Icons     []manifestIcon `json:"icons"`
-	}
-
 	absoluteAssetURL := strings.TrimSuffix(httplib.MakeAbsoluteURL(ctx, setting.StaticURLPrefix), "/")
-	manifest := &manifestJSON{
-		Name:      setting.AppName,
-		ShortName: setting.AppName,
-		StartURL:  httplib.GuessCurrentAppURL(ctx),
-		Icons: []manifestIcon{
-			{
-				Src:   absoluteAssetURL + "/assets/img/logo.png",
-				Type:  "image/png",
-				Sizes: "512x512",
-			},
-			{
-				Src:   absoluteAssetURL + "/assets/img/logo.svg",
-				Type:  "image/svg+xml",
-				Sizes: "512x512",
-			},
+	manifest := map[string]any{
+		"name":       setting.AppName,
+		"short_name": setting.AppName,
+		"start_url":  httplib.GuessCurrentAppURL(ctx),
+		"icons": []map[string]string{
+			{"src": absoluteAssetURL + "/assets/img/logo.png", "type": "image/png", "sizes": "512x512"},
+			{"src": absoluteAssetURL + "/assets/img/logo.svg", "type": "image/svg+xml", "sizes": "512x512"},
 		},
 	}
 	_ = json.NewEncoder(w).Encode(manifest)
