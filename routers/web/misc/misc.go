@@ -21,13 +21,16 @@ import (
 )
 
 func SiteManifest(w http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-	httpcache.SetCacheControlInHeader(w.Header(), httpcache.CacheControlForPublicStatic())
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
+	// the settings are loaded on app startup, so use AppStartTime as "Last-Modified" time
+	if httpcache.HandleGenericETagPublicCache(req, w, "", &setting.AppStartTime) {
+		return
+	}
 	if req.Method == http.MethodHead {
 		return
 	}
 
+	ctx := req.Context()
 	absoluteAssetURL := strings.TrimSuffix(httplib.MakeAbsoluteURL(ctx, setting.StaticURLPrefix), "/")
 	manifest := map[string]any{
 		"name":       setting.AppName,
