@@ -72,8 +72,12 @@ func TestCommitListActions(t *testing.T) {
 func TestSiteManifest(t *testing.T) {
 	defer tests.PrepareTestEnv(t)()
 
-	req := NewRequest(t, "GET", "/assets/site-manifest.json")
+	req := NewRequest(t, "GET", "/")
 	resp := MakeRequest(t, req, http.StatusOK)
+	assert.Contains(t, resp.Body.String(), `<link rel="manifest" href="/assets/site-manifest.json">`)
+
+	req = NewRequest(t, "GET", "/assets/site-manifest.json")
+	resp = MakeRequest(t, req, http.StatusOK)
 	assert.Equal(t, "application/json;charset=utf-8", resp.Header().Get("Content-Type"))
 
 	assetBase := strings.TrimSuffix(setting.AppURL, "/")
