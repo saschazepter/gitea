@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"strings"
 
 	"code.gitea.io/gitea/modules/git"
 	"code.gitea.io/gitea/modules/httpcache"
@@ -40,7 +41,7 @@ func SiteManifest(w http.ResponseWriter, req *http.Request) {
 		Icons     []manifestIcon `json:"icons"`
 	}
 
-	absoluteAssetURL := httplib.MakeAbsoluteURL(ctx, setting.StaticURLPrefix)
+	absoluteAssetURL := strings.TrimSuffix(httplib.MakeAbsoluteURL(ctx, setting.StaticURLPrefix), "/")
 	manifest := &manifestJSON{
 		Name:      setting.AppName,
 		ShortName: setting.AppName,
