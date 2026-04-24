@@ -7,10 +7,11 @@ import (
 	"net/http"
 	"path"
 	"strconv"
-	"sync"
 
 	"code.gitea.io/gitea/modules/git"
 	"code.gitea.io/gitea/modules/httpcache"
+	"code.gitea.io/gitea/modules/httplib"
+	"code.gitea.io/gitea/modules/json"
 	"code.gitea.io/gitea/modules/log"
 	"code.gitea.io/gitea/modules/setting"
 	"code.gitea.io/gitea/modules/util"
@@ -18,21 +19,46 @@ import (
 	"code.gitea.io/gitea/services/context"
 )
 
-var (
-	siteManifestOnce  sync.Once
-	siteManifestBytes []byte
-)
-
 func SiteManifest(w http.ResponseWriter, req *http.Request) {
-	siteManifestOnce.Do(func() {
-		siteManifestBytes = setting.MakeManifestData(setting.AppName, setting.AppURL, setting.AbsoluteAssetURL)
-	})
+	ctx := req.Context()
 	httpcache.SetCacheControlInHeader(w.Header(), httpcache.CacheControlForPublicStatic())
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
-	_, err := w.Write(siteManifestBytes)
-	if err != nil {
-		log.Error("Failed to write site manifest: %v", err)
+	if req.Method == http.MethodHead {
+		return
 	}
+
+	type manifestIcon struct {
+		Src   string `json:"src"`
+		Type  string `json:"type"`
+		Sizes string `json:"sizes"`
+	}
+
+	type manifestJSON struct {
+		Name      string         `json:"name"`
+		ShortName string         `json:"short_name"`
+		StartURL  string         `json:"start_url"`
+		Icons     []manifestIcon `json:"icons"`
+	}
+
+	absoluteAssetURL := httplib.MakeAbsoluteURL(ctx, setting.StaticURLPrefix)
+	manifest := &manifestJSON{
+		Name:      setting.AppName,
+		ShortName: setting.AppName,
+		StartURL:  httplib.GuessCurrentAppURL(ctx),
+		Icons: []manifestIcon{
+			{
+				Src:   absoluteAssetURL + "/assets/img/logo.png",
+				Type:  "image/png",
+				Sizes: "512x512",
+			},
+			{
+				Src:   absoluteAssetURL + "/assets/img/logo.svg",
+				Type:  "image/svg+xml",
+				Sizes: "512x512",
+			},
+		},
+	}
+	_ = json.NewEncoder(w).Encode(manifest)
 }
 
 func SSHInfo(rw http.ResponseWriter, req *http.Request) {
