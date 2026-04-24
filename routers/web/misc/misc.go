@@ -21,9 +21,10 @@ import (
 )
 
 func SiteManifest(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json;charset=utf-8")
-	// the settings are loaded on app startup, so use AppStartTime as "Last-Modified" time
-	if httpcache.HandleGenericETagPublicCache(req, w, "", &setting.AppStartTime) {
+	w.Header().Set("Content-Type", "application/manifest+json")
+	// start_url and icon URLs are derived from the request, so a shared cache
+	// must not reuse the response across hosts; use a private cache instead.
+	if httpcache.HandleGenericETagPrivateCache(req, w, "", &setting.AppStartTime) {
 		return
 	}
 	if req.Method == http.MethodHead {
@@ -41,7 +42,9 @@ func SiteManifest(w http.ResponseWriter, req *http.Request) {
 			{"src": absoluteAssetURL + "/assets/img/logo.svg", "type": "image/svg+xml", "sizes": "512x512"},
 		},
 	}
-	_ = json.NewEncoder(w).Encode(manifest)
+	if err := json.NewEncoder(w).Encode(manifest); err != nil {
+		log.Error("failed to encode site manifest: %v", err)
+	}
 }
 
 func SSHInfo(rw http.ResponseWriter, req *http.Request) {

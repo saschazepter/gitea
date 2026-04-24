@@ -93,7 +93,7 @@ func testSiteManifest(t *testing.T) {
 
 	req = NewRequest(t, "GET", "/assets/site-manifest.json")
 	resp = MakeRequest(t, req, http.StatusOK)
-	assert.Equal(t, "application/json;charset=utf-8", resp.Header().Get("Content-Type"))
+	assert.Equal(t, "application/manifest+json", resp.Header().Get("Content-Type"))
 
 	assetBase := strings.TrimSuffix(setting.AppURL, "/")
 	expectedJSON := fmt.Sprintf(`{
