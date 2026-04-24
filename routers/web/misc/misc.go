@@ -42,9 +42,7 @@ func SiteManifest(w http.ResponseWriter, req *http.Request) {
 			{"src": absoluteAssetURL + "/assets/img/logo.svg", "type": "image/svg+xml", "sizes": "512x512"},
 		},
 	}
-	if err := json.NewEncoder(w).Encode(manifest); err != nil {
-		log.Error("failed to encode site manifest: %v", err)
-	}
+	_ = json.NewEncoder(w).Encode(manifest)
 }
 
 func SSHInfo(rw http.ResponseWriter, req *http.Request) {
