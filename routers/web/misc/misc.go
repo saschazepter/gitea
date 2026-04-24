@@ -22,9 +22,7 @@ import (
 
 func SiteManifest(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/manifest+json")
-	// start_url and icon URLs are derived from the request, so a shared cache
-	// must not reuse the response across hosts; use a private cache instead.
-	if httpcache.HandleGenericETagPrivateCache(req, w, "", &setting.AppStartTime) {
+	if httpcache.HandleGenericETagPublicCache(req, w, "", &setting.AppStartTime) {
 		return
 	}
 	if req.Method == http.MethodHead {
