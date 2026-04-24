@@ -110,7 +110,7 @@ var (
 	StartupTimeout             time.Duration
 	PerWriteTimeout            = 30 * time.Second
 	PerWritePerKbTimeout       = 10 * time.Second
-	StaticURLPrefix            string // either an absolute URL, or a AppSubURL (no trailing slash)
+	StaticURLPrefix            string // no trailing slash, defaults to AppSubURL, the URL can be relative or absolute
 )
 
 func loadServerFrom(rootCfg ConfigProvider) {
