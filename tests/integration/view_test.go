@@ -87,8 +87,6 @@ func testSecurityHeadersDefaults(t *testing.T) {
 }
 
 func testSiteManifest(t *testing.T) {
-	defer tests.PrepareTestEnv(t)()
-
 	req := NewRequest(t, "GET", "/")
 	resp := MakeRequest(t, req, http.StatusOK)
 	assert.Contains(t, resp.Body.String(), `<link rel="manifest" href="/assets/site-manifest.json">`)
