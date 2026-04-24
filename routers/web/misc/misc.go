@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"sync"
 
 	"code.gitea.io/gitea/modules/git"
 	"code.gitea.io/gitea/modules/httpcache"
@@ -17,11 +18,18 @@ import (
 	"code.gitea.io/gitea/services/context"
 )
 
+var (
+	siteManifestOnce  sync.Once
+	siteManifestBytes []byte
+)
+
 func SiteManifest(w http.ResponseWriter, req *http.Request) {
-	jsonBytes := setting.MakeManifestData(setting.AppName, setting.AppURL, setting.AbsoluteAssetURL)
+	siteManifestOnce.Do(func() {
+		siteManifestBytes = setting.MakeManifestData(setting.AppName, setting.AppURL, setting.AbsoluteAssetURL)
+	})
 	httpcache.SetCacheControlInHeader(w.Header(), httpcache.CacheControlForPublicStatic())
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
-	_, err := w.Write(jsonBytes)
+	_, err := w.Write(siteManifestBytes)
 	if err != nil {
 		log.Error("Failed to write site manifest: %v", err)
 	}
