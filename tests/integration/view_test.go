@@ -4,13 +4,44 @@
 package integration
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
+	"code.gitea.io/gitea/modules/setting"
 	"code.gitea.io/gitea/tests"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestSiteManifest(t *testing.T) {
+	defer tests.PrepareTestEnv(t)()
+
+	req := NewRequest(t, "GET", "/assets/site-manifest.json")
+	resp := MakeRequest(t, req, http.StatusOK)
+
+	assert.Equal(t, "application/json;charset=utf-8", resp.Header().Get("Content-Type"))
+
+	// When no Host header is present (test environment), absoluteAssetURL falls back to
+	// setting.AppURL (which has a trailing slash), giving a double-slash prefix for icon paths.
+	assetBase := setting.AppURL
+	expectedJSON := fmt.Sprintf(`{
+		"name": %q,
+		"short_name": %q,
+		"start_url": %q,
+		"icons": [
+			{"src": %q, "type": "image/png",     "sizes": "512x512"},
+			{"src": %q, "type": "image/svg+xml",  "sizes": "512x512"}
+		]
+	}`,
+		setting.AppName,
+		setting.AppName,
+		setting.AppURL,
+		assetBase+"/assets/img/logo.png",
+		assetBase+"/assets/img/logo.svg",
+	)
+	assert.JSONEq(t, expectedJSON, resp.Body.String())
+}
 
 func TestRenderFileSVGIsInImgTag(t *testing.T) {
 	defer tests.PrepareTestEnv(t)()
