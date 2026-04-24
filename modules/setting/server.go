@@ -4,7 +4,6 @@
 package setting
 
 import (
-	"encoding/base64"
 	"net"
 	"net/url"
 	"os"
@@ -114,8 +113,6 @@ var (
 	PerWritePerKbTimeout       = 10 * time.Second
 	StaticURLPrefix            string
 	AbsoluteAssetURL           string
-
-	ManifestData string
 )
 
 // MakeManifestData generates web app manifest JSON
@@ -314,8 +311,6 @@ func loadServerFrom(rootCfg ConfigProvider) {
 	}
 
 	AbsoluteAssetURL = MakeAbsoluteAssetURL(appURL, StaticURLPrefix)
-	manifestBytes := MakeManifestData(AppName, AppURL, AbsoluteAssetURL)
-	ManifestData = `application/json;base64,` + base64.StdEncoding.EncodeToString(manifestBytes)
 
 	var defaultLocalURL string
 	switch Protocol {

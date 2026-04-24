@@ -17,6 +17,16 @@ import (
 	"code.gitea.io/gitea/services/context"
 )
 
+func SiteManifest(w http.ResponseWriter, req *http.Request) {
+	jsonBytes := setting.MakeManifestData(setting.AppName, setting.AppURL, setting.AbsoluteAssetURL)
+	httpcache.SetCacheControlInHeader(w.Header(), httpcache.CacheControlForPublicStatic())
+	w.Header().Set("Content-Type", "application/json;charset=utf-8")
+	_, err := w.Write(jsonBytes)
+	if err != nil {
+		log.Error("Failed to write site manifest: %v", err)
+	}
+}
+
 func SSHInfo(rw http.ResponseWriter, req *http.Request) {
 	if !git.DefaultFeatures().SupportProcReceive {
 		rw.WriteHeader(http.StatusNotFound)
