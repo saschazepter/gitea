@@ -102,7 +102,7 @@ func testSiteManifest(t *testing.T) {
 		"start_url": %q,
 		"icons": [
 			{"src": %q, "type": "image/png",     "sizes": "512x512"},
-			{"src": %q, "type": "image/svg+xml",  "sizes": "512x512"}
+			{"src": %q, "type": "image/svg+xml", "sizes": "512x512"}
 		]
 	}`,
 		setting.AppName,
