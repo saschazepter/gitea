@@ -96,16 +96,17 @@ func testPullCleanUp(t *testing.T, session *TestSession, user, repo, pullnum str
 func preparePullMergeWebhook(t *testing.T, repoID int64) {
 	require.NoError(t, db.TruncateBeans(t.Context(), &webhook.Webhook{}, &webhook.HookTask{}))
 	require.NoError(t, db.Insert(t.Context(), &webhook.Webhook{
-		RepoID:      1,
-		URL:         "https://www.example.com/url1",
+		RepoID:      repoID,
+		URL:         "http://localhost/gitea-test-webhook-pull-merge",
 		ContentType: webhook.ContentTypeJSON,
 		Events:      `{"push_only":true,"send_everything":false,"choose_events":false,"events":{"create":false,"push":true,"pull_request":false}}`,
 		IsActive:    true,
 	}))
 }
 
-func assertPullMergeWebhookTask(t *testing.T) {
-	unittest.AssertExistsAndLoadBean(t, &webhook.HookTask{HookID: 1})
+func assertPullMergeWebhookTask(t *testing.T, repoID int64) {
+	hook := unittest.AssertExistsAndLoadBean(t, &webhook.Webhook{RepoID: repoID})
+	unittest.AssertExistsAndLoadBean(t, &webhook.HookTask{HookID: hook.ID})
 }
 
 func TestPullMerge(t *testing.T) {
@@ -136,7 +137,7 @@ func TestPullMerge(t *testing.T) {
 		assert.Equal(t, 4, repo.NumPulls)
 		assert.Equal(t, 3, repo.NumOpenPulls)
 
-		assertPullMergeWebhookTask(t)
+		assertPullMergeWebhookTask(t, 1)
 	})
 }
 
@@ -168,7 +169,7 @@ func TestPullRebase(t *testing.T) {
 		assert.Equal(t, 4, repo.NumPulls)
 		assert.Equal(t, 3, repo.NumOpenPulls)
 
-		assertPullMergeWebhookTask(t)
+		assertPullMergeWebhookTask(t, 1)
 	})
 }
 
@@ -200,7 +201,7 @@ func TestPullRebaseMerge(t *testing.T) {
 		assert.Equal(t, 4, repo.NumPulls)
 		assert.Equal(t, 3, repo.NumOpenPulls)
 
-		assertPullMergeWebhookTask(t)
+		assertPullMergeWebhookTask(t, 1)
 	})
 }
 
@@ -221,7 +222,7 @@ func TestPullSquash(t *testing.T) {
 			DeleteBranch: false,
 		})
 
-		assertPullMergeWebhookTask(t)
+		assertPullMergeWebhookTask(t, 1)
 	})
 }
 
@@ -260,7 +261,7 @@ func TestPullSquashWithHeadCommitID(t *testing.T) {
 		assert.Equal(t, 4, repo.NumPulls)
 		assert.Equal(t, 3, repo.NumOpenPulls)
 
-		assertPullMergeWebhookTask(t)
+		assertPullMergeWebhookTask(t, 1)
 	})
 }
 
