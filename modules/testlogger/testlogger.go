@@ -118,7 +118,7 @@ func PrintCurrentTest(t testing.TB, skip ...int) func() {
 	deferHasRun := false
 	t.Cleanup(func() {
 		if !deferHasRun {
-			stdoutPrintf("!!! %s defer function hasn't been run but Cleanup is called, usually caused by panic\n", t.Name())
+			stdoutPrintf("!!! %s: defer function hasn't been run but Cleanup is called, usually caused by panic\n", t.Name())
 		}
 	})
 	stdoutPrintf("=== %s (%s:%d)\n", log.NewColoredValue(t.Name()), strings.TrimPrefix(filename, prefix), line)

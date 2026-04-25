@@ -198,7 +198,7 @@ func runGitTests(m interface{ Run() int }) int {
 
 	setting.Git.HomePath = gitHomePath
 	if err = InitFull(); err != nil {
-		return testlogger.MainErrorf("failed to call Init: %s", err)
+		return testlogger.MainErrorf("failed to call Init: %v", err)
 	}
 	return m.Run()
 }
