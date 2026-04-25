@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"testing"
 
+	"code.gitea.io/gitea/models/db"
 	"code.gitea.io/gitea/models/unittest"
 	"code.gitea.io/gitea/models/webhook"
 	"code.gitea.io/gitea/services/contexttest"
@@ -25,7 +26,7 @@ func TestTestHook(t *testing.T) {
 		Events:      `{"push_only":true}`,
 		IsActive:    true,
 	}
-	assert.NoError(t, webhook.CreateWebhook(t.Context(), hook))
+	assert.NoError(t, db.Insert(t.Context(), hook))
 
 	ctx, _ := contexttest.MockAPIContext(t, "user2/repo1/wiki/_pages")
 	ctx.SetPathParam("id", fmt.Sprintf("%d", hook.ID))

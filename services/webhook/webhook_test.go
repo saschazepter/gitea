@@ -6,6 +6,7 @@ package webhook
 import (
 	"testing"
 
+	"code.gitea.io/gitea/models/db"
 	repo_model "code.gitea.io/gitea/models/repo"
 	"code.gitea.io/gitea/models/unittest"
 	user_model "code.gitea.io/gitea/models/user"
@@ -44,7 +45,7 @@ func TestPrepareWebhooks(t *testing.T) {
 		Events:      `{"push_only":true}`,
 		IsActive:    true,
 	}
-	assert.NoError(t, webhook_model.CreateWebhook(t.Context(), hook))
+	assert.NoError(t, db.Insert(t.Context(), hook))
 
 	hookTask := &webhook_model.HookTask{HookID: hook.ID, EventType: webhook_module.HookEventPush}
 	unittest.AssertNotExistsBean(t, hookTask)
@@ -63,7 +64,7 @@ func TestPrepareWebhooksBranchFilterMatch(t *testing.T) {
 		Events:      `{"push_only":true,"branch_filter":"{master,feature*}"}`,
 		IsActive:    true,
 	}
-	assert.NoError(t, webhook_model.CreateWebhook(t.Context(), hook))
+	assert.NoError(t, db.Insert(t.Context(), hook))
 
 	hookTask := &webhook_model.HookTask{HookID: hook.ID, EventType: webhook_module.HookEventPush}
 	unittest.AssertNotExistsBean(t, hookTask)
@@ -83,7 +84,7 @@ func TestPrepareWebhooksBranchFilterNoMatch(t *testing.T) {
 		Events:      `{"push_only":true,"branch_filter":"{master,feature*}"}`,
 		IsActive:    true,
 	}
-	assert.NoError(t, webhook_model.CreateWebhook(t.Context(), hook))
+	assert.NoError(t, db.Insert(t.Context(), hook))
 
 	hookTask := &webhook_model.HookTask{HookID: hook.ID, EventType: webhook_module.HookEventPush}
 	unittest.AssertNotExistsBean(t, hookTask)
