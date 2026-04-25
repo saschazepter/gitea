@@ -65,7 +65,7 @@ func SetupGiteaTestEnv() {
 			giteaConf = "custom/conf/app-test-tmp.ini"
 			customConfBuiltin = filepath.Join(AppWorkPath, giteaConf)
 			CustomConf = customConfBuiltin
-			_ = os.Remove(CustomConf)
+			_ = os.WriteFile(CustomConf, []byte(os.Getenv("GITEA_TEST_CONF_CONTENT")), os.ModePerm)
 		} else {
 			// CustomConf must be absolute path to make tests pass,
 			CustomConf = filepath.Join(AppWorkPath, giteaConf)

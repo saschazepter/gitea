@@ -42,7 +42,22 @@ func MainTest(m *testing.M, testOptsArg ...*TestOptions) {
 
 func mainTest(m *testing.M, testOptsArg ...*TestOptions) int {
 	testOpts := util.OptionalArg(testOptsArg, &TestOptions{})
+
+	appDataPath, appDataCleanup, err := tempdir.OsTempDir("gitea-test").MkdirTempRandom("appdata")
+	if err != nil {
+		testlogger.Panicf("TempDir: %v\n", err)
+	}
+	defer appDataCleanup()
+	_ = os.Setenv("GITEA_TEST_CONF_CONTENT", `
+[server]
+APP_DATA_PATH = "`+appDataPath+`"
+`)
 	setting.SetupGiteaTestEnv()
+	if setting.RepoRootPath == "" || setting.AppDataPath == "" {
+		_, _ = fmt.Fprintln(os.Stderr, "SetupGiteaTestEnv failed, paths are not initialized")
+		os.Exit(1)
+	}
+
 	giteaRoot := setting.GetGiteaTestSourceRoot()
 	fixturesOpts := FixturesOptions{Dir: filepath.Join(giteaRoot, "models", "fixtures"), Files: testOpts.FixtureFiles}
 	if err := CreateTestEngine(fixturesOpts); err != nil {
@@ -59,38 +74,7 @@ func mainTest(m *testing.M, testOptsArg ...*TestOptions) int {
 	setting.SSH.Domain = "try.gitea.io"
 	setting.Database.Type = "sqlite3"
 	setting.Repository.DefaultBranch = "master" // many test code still assume that default branch is called "master"
-	repoRootPath, cleanup1, err := tempdir.OsTempDir("gitea-test").MkdirTempRandom("repos")
-	if err != nil {
-		testlogger.Panicf("TempDir: %v\n", err)
-	}
-	defer cleanup1()
-
-	setting.RepoRootPath = repoRootPath
-	appDataPath, cleanup2, err := tempdir.OsTempDir("gitea-test").MkdirTempRandom("appdata")
-	if err != nil {
-		testlogger.Panicf("TempDir: %v\n", err)
-	}
-	defer cleanup2()
-
-	setting.AppDataPath = appDataPath
 	setting.GravatarSource = "https://secure.gravatar.com/avatar/"
-
-	setting.Attachment.Storage.Path = filepath.Join(setting.AppDataPath, "attachments")
-
-	setting.LFS.Storage.Path = filepath.Join(setting.AppDataPath, "lfs")
-
-	setting.Avatar.Storage.Path = filepath.Join(setting.AppDataPath, "avatars")
-
-	setting.RepoAvatar.Storage.Path = filepath.Join(setting.AppDataPath, "repo-avatars")
-
-	setting.RepoArchive.Storage.Path = filepath.Join(setting.AppDataPath, "repo-archive")
-
-	setting.Packages.Storage.Path = filepath.Join(setting.AppDataPath, "packages")
-
-	setting.Actions.LogStorage.Path = filepath.Join(setting.AppDataPath, "actions_log")
-
-	setting.Git.HomePath = filepath.Join(setting.AppDataPath, "home")
-
 	setting.IncomingEmail.ReplyToAddress = "incoming+%{token}@localhost"
 
 	config.SetDynGetter(system.NewDatabaseDynKeyGetter())
