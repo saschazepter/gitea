@@ -278,11 +278,6 @@ func loadServerFrom(rootCfg ConfigProvider) {
 	StaticRootPath = sec.Key("STATIC_ROOT_PATH").MustString(StaticRootPath)
 	StaticCacheTime = sec.Key("STATIC_CACHE_TIME").MustDuration(6 * time.Hour)
 	AppDataPath = sec.Key("APP_DATA_PATH").MustString(filepath.Join(AppWorkPath, "data"))
-
-	// FIXME: debug
-	bufCustomConf, _ := os.ReadFile(CustomConf)
-	log.Error("Set AppDataPath=%s (CustomConf=%s)\n%s\n%s\n", AppDataPath, CustomConf, string(bufCustomConf), log.Stack(2))
-	DebugAppendLog("Set AppDataPath=%s (CustomConf=%s)\n%s\n%s\n", AppDataPath, CustomConf, string(bufCustomConf), log.Stack(2))
 	if !filepath.IsAbs(AppDataPath) {
 		AppDataPath = filepath.ToSlash(filepath.Join(AppWorkPath, AppDataPath))
 	}

@@ -47,24 +47,13 @@ func mainTest(m *testing.M, testOptsArg ...*TestOptions) int {
 
 	testOpts := util.OptionalArg(testOptsArg, &TestOptions{})
 
-	appDataPath, appDataCleanup, err := tempdir.OsTempDir("gitea-test").MkdirTempRandom("unit-test-data-")
+	tempWorkPath, tempCleanup, err := tempdir.OsTempDir("gitea-test").MkdirTempRandom("unit-test-dir-")
 	if err != nil {
-		return reportError("Failed to create temp dir for app data path: %v", err)
+		return reportError("Failed to create temp dir for unit test: %v", err)
 	}
+	defer tempCleanup()
 
-	// FIXME: debug
-	_, _ = fmt.Fprintf(os.Stderr, "Prepare APP_DATA_PATH for SetupGiteaTestEnv: %s\n", appDataPath)
-	setting.DebugAppendLog("Prepare APP_DATA_PATH for SetupGiteaTestEnv: %s", appDataPath)
-	defer func() {
-		_, _ = fmt.Fprintf(os.Stderr, "Remove APP_DATA_PATH for SetupGiteaTestEnv: %s\n", appDataPath)
-		setting.DebugAppendLog("Remove APP_DATA_PATH for SetupGiteaTestEnv: %s", appDataPath)
-		appDataCleanup()
-	}()
-
-	_ = os.Setenv("GITEA_TEST_CONF_CONTENT", `
-[server]
-APP_DATA_PATH = `+appDataPath+`
-`)
+	defer setting.MockBuiltinPaths(tempWorkPath, "", "")()
 	setting.SetupGiteaTestEnv()
 	if setting.RepoRootPath == "" || setting.AppDataPath == "" {
 		return reportError("SetupGiteaTestEnv failed, paths are not initialized")

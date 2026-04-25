@@ -22,8 +22,6 @@ import (
 func TestMigratePackages(t *testing.T) {
 	assert.NoError(t, unittest.PrepareTestDatabase())
 
-	t.Log("DebugLogs", setting.DebugGetLogs())
-
 	creator := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 1})
 
 	content := "package main\n\nfunc main() {\nfmt.Println(\"hi\")\n}\n"

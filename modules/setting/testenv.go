@@ -21,19 +21,6 @@ func GetGiteaTestSourceRoot() string {
 	return *giteaTestSourceRoot
 }
 
-func DebugAppendLog(msg string, a ...any) {
-	f, _ := os.OpenFile("/tmp/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if f != nil {
-		defer f.Close()
-		fmt.Fprintf(f, msg+"\n", a...)
-	}
-}
-
-func DebugGetLogs() string {
-	buf, _ := os.ReadFile("/tmp/debug.log")
-	return string(buf)
-}
-
 func SetupGiteaTestEnv() {
 	if giteaTestSourceRoot != nil {
 		return // already initialized
@@ -75,14 +62,11 @@ func SetupGiteaTestEnv() {
 		giteaConf := os.Getenv("GITEA_TEST_CONF")
 		if giteaConf == "" {
 			// if no GITEA_TEST_CONF, then it is in unit test, use a temp (non-existing / empty) config file
+			// do not really use such config file, the test can run concurrently, using the same config file will cause data-race between tests
 			giteaConf = "custom/conf/app-test-tmp.ini"
 			customConfBuiltin = filepath.Join(AppWorkPath, giteaConf)
 			CustomConf = customConfBuiltin
-			_ = os.WriteFile(CustomConf, []byte(os.Getenv("GITEA_TEST_CONF_CONTENT")), 0o644)
-
-			// FIXME: debug
-			log.Error("SetupGiteaTestEnv CustomConf=%s\n%s\n%s\n", CustomConf, os.Getenv("GITEA_TEST_CONF_CONTENT"), log.Stack(2))
-			DebugAppendLog("SetupGiteaTestEnv CustomConf=%s\n%s\n%s\n", CustomConf, os.Getenv("GITEA_TEST_CONF_CONTENT"), log.Stack(2))
+			_ = os.Remove(CustomConf)
 		} else {
 			// CustomConf must be absolute path to make tests pass,
 			CustomConf = filepath.Join(AppWorkPath, giteaConf)
