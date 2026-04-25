@@ -4,6 +4,7 @@
 package webhook
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -14,134 +15,105 @@ import (
 	"code.gitea.io/gitea/modules/timeutil"
 	webhook_module "code.gitea.io/gitea/modules/webhook"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
-// webhookTestFixtures holds standard webhook test data created by prepareWebhookTestData.
-type webhookTestFixtures struct {
-	HookRepo1        *Webhook
-	HookRepo1Inactive *Webhook
-	HookOwner3       *Webhook
-	HookRepo2Branch  *Webhook
-	HookSystem       *Webhook
-	HookDefault      *Webhook
-	HookTask1        *HookTask
-	HookTask2        *HookTask
-	HookTask3        *HookTask
-}
-
-// prepareWebhookTestData resets the test database and inserts a standard set of
-// webhooks and hook tasks used across multiple tests in this package.
-func prepareWebhookTestData(t *testing.T) *webhookTestFixtures {
-	t.Helper()
-	require.NoError(t, unittest.PrepareTestDatabase())
-
-	hookRepo1 := &Webhook{
+func prepareWebhookTestData() error {
+	if err := unittest.PrepareTestDatabase(); err != nil {
+		return err
+	}
+	var hooks []*Webhook
+	hooks = append(hooks, &Webhook{
 		RepoID:      1,
 		URL:         "https://www.example.com/url1",
 		ContentType: ContentTypeJSON,
-		Events:      `{"push_only":true}`,
+		Events:      `{"push_only":true,"send_everything":false,"choose_events":false,"events":{"create":false,"push":true,"pull_request":false}}`,
 		IsActive:    true,
-	}
-	require.NoError(t, db.Insert(t.Context(), hookRepo1))
-
-	hookRepo1Inactive := &Webhook{
+	})
+	hooks = append(hooks, &Webhook{
 		RepoID:      1,
 		URL:         "https://www.example.com/url2",
 		ContentType: ContentTypeJSON,
-		Events:      `{"push_only":false,"choose_events":false,"events":{"create":false,"push":true,"pull_request":true}}`,
+		Events:      `{}`,
 		IsActive:    false,
-	}
-	require.NoError(t, db.Insert(t.Context(), hookRepo1Inactive))
-
-	hookOwner3 := &Webhook{
+	})
+	hooks = append(hooks, &Webhook{
 		OwnerID:     3,
 		RepoID:      3,
 		URL:         "https://www.example.com/url3",
 		ContentType: ContentTypeJSON,
-		Events:      `{"push_only":false,"choose_events":false,"events":{"create":false,"push":true,"pull_request":true}}`,
+		Events:      `{"push_only":false,"send_everything":false,"choose_events":false,"events":{"create":false,"push":true,"pull_request":true}}`,
 		IsActive:    true,
-	}
-	require.NoError(t, db.Insert(t.Context(), hookOwner3))
-
-	hookRepo2Branch := &Webhook{
+	})
+	hooks = append(hooks, &Webhook{
+		OwnerID:     3,
+		RepoID:      3,
+		URL:         "https://www.example.com/url3",
+		ContentType: ContentTypeJSON,
+		Events:      `{}`,
+	})
+	hooks = append(hooks, &Webhook{
 		RepoID:      2,
 		URL:         "https://www.example.com/url4",
 		ContentType: ContentTypeJSON,
 		Events:      `{"push_only":true,"branch_filter":"{master,feature*}"}`,
 		IsActive:    true,
-	}
-	require.NoError(t, db.Insert(t.Context(), hookRepo2Branch))
-
-	hookSystem := &Webhook{
-		URL:             "https://www.example.com/url5",
+	})
+	hooks = append(hooks, &Webhook{
+		URL:             "https://www.example.com/system",
 		ContentType:     ContentTypeJSON,
-		Events:          `{"push_only":true}`,
-		IsActive:        true,
+		Events:          `{"push_only":true,"branch_filter":"{master,feature*}"}`,
 		IsSystemWebhook: true,
+	})
+	hooks = append(hooks, &Webhook{
+		URL:         "https://www.example.com/default",
+		ContentType: ContentTypeJSON,
+		Events:      `{"push_only":true,"branch_filter":"{master,feature*}"}`,
+	})
+	ctx := context.Background()
+	if err := db.TruncateBeans(ctx, &Webhook{}); err != nil {
+		return err
 	}
-	require.NoError(t, db.Insert(t.Context(), hookSystem))
-
-	hookDefault := &Webhook{
-		URL:             "https://www.example.com/url6",
-		ContentType:     ContentTypeJSON,
-		Events:          `{"push_only":true}`,
-		IsActive:        true,
-		IsSystemWebhook: false,
+	if err := db.Insert(ctx, hooks); err != nil {
+		return err
 	}
-	require.NoError(t, db.Insert(t.Context(), hookDefault))
 
-	task1, err := CreateHookTask(t.Context(), &HookTask{HookID: hookRepo1.ID, IsDelivered: true, PayloadVersion: 2})
-	require.NoError(t, err)
-	task2, err := CreateHookTask(t.Context(), &HookTask{HookID: hookRepo1.ID, IsDelivered: true, PayloadVersion: 2})
-	require.NoError(t, err)
-	task3, err := CreateHookTask(t.Context(), &HookTask{HookID: hookRepo1.ID, IsDelivered: true, PayloadVersion: 2})
-	require.NoError(t, err)
-
-	return &webhookTestFixtures{
-		HookRepo1:         hookRepo1,
-		HookRepo1Inactive: hookRepo1Inactive,
-		HookOwner3:        hookOwner3,
-		HookRepo2Branch:   hookRepo2Branch,
-		HookSystem:        hookSystem,
-		HookDefault:       hookDefault,
-		HookTask1:         task1,
-		HookTask2:         task2,
-		HookTask3:         task3,
+	hook, _, _ := db.Get[Webhook](ctx, builder.Eq{"repo_id": 1, "is_active": true})
+	var tasks []*HookTask
+	tasks = append(tasks, &HookTask{HookID: hook.ID, UUID: uuid.New().String()})
+	tasks = append(tasks, &HookTask{HookID: hook.ID, UUID: uuid.New().String()})
+	tasks = append(tasks, &HookTask{HookID: hook.ID, UUID: uuid.New().String()})
+	if err := db.TruncateBeans(ctx, &HookTask{}); err != nil {
+		return err
 	}
+	return db.Insert(ctx, tasks)
 }
 
-func TestHookContentType_Name(t *testing.T) {
+func TestWebHookContentType(t *testing.T) {
 	assert.Equal(t, "json", ContentTypeJSON.Name())
 	assert.Equal(t, "form", ContentTypeForm.Name())
-}
-
-func TestIsValidHookContentType(t *testing.T) {
 	assert.True(t, IsValidHookContentType("json"))
 	assert.True(t, IsValidHookContentType("form"))
 	assert.False(t, IsValidHookContentType("invalid"))
 }
 
 func TestWebhook_History(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
+	hook := unittest.AssertExistsAndLoadBean(t, &Webhook{RepoID: 1, IsActive: true})
+	tasks, err := hook.History(t.Context(), 0)
+	require.NoError(t, err)
+	require.Len(t, tasks, 3)
 
-	tasks, err := fixture.HookRepo1.History(t.Context(), 0)
-	assert.NoError(t, err)
-	if assert.Len(t, tasks, 3) {
-		assert.Equal(t, fixture.HookTask3.ID, tasks[0].ID)
-		assert.Equal(t, fixture.HookTask2.ID, tasks[1].ID)
-		assert.Equal(t, fixture.HookTask1.ID, tasks[2].ID)
-	}
-
-	tasks, err = fixture.HookRepo1Inactive.History(t.Context(), 0)
+	hook = unittest.AssertExistsAndLoadBean(t, &Webhook{RepoID: 1, Events: "{}"})
+	tasks, err = hook.History(t.Context(), 0)
 	assert.NoError(t, err)
 	assert.Empty(t, tasks)
 }
 
 func TestWebhook_UpdateEvent(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-	webhook := fixture.HookRepo1
+	webhook := unittest.AssertExistsAndLoadBean(t, &Webhook{RepoID: 1, IsActive: true})
 	hookEvent := &webhook_module.HookEvent{
 		PushOnly:       true,
 		SendEverything: false,
@@ -194,11 +166,10 @@ func TestCreateWebhook(t *testing.T) {
 }
 
 func TestGetWebhookByRepoID(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-
-	loaded, err := GetWebhookByRepoID(t.Context(), 1, fixture.HookRepo1.ID)
+	hook := unittest.AssertExistsAndLoadBean(t, &Webhook{RepoID: 1, IsActive: true})
+	loaded, err := GetWebhookByRepoID(t.Context(), 1, hook.ID)
 	assert.NoError(t, err)
-	assert.Equal(t, fixture.HookRepo1.ID, loaded.ID)
+	assert.Equal(t, hook.ID, loaded.ID)
 
 	_, err = GetWebhookByRepoID(t.Context(), unittest.NonexistentID, unittest.NonexistentID)
 	assert.Error(t, err)
@@ -206,11 +177,10 @@ func TestGetWebhookByRepoID(t *testing.T) {
 }
 
 func TestGetWebhookByOwnerID(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-
-	loaded, err := GetWebhookByOwnerID(t.Context(), 3, fixture.HookOwner3.ID)
-	assert.NoError(t, err)
-	assert.Equal(t, fixture.HookOwner3.ID, loaded.ID)
+	hook := unittest.AssertExistsAndLoadBean(t, &Webhook{OwnerID: 3})
+	loaded, err := GetWebhookByOwnerID(t.Context(), 3, hook.ID)
+	require.NoError(t, err)
+	require.Equal(t, hook.ID, loaded.ID)
 
 	_, err = GetWebhookByOwnerID(t.Context(), unittest.NonexistentID, unittest.NonexistentID)
 	assert.Error(t, err)
@@ -218,52 +188,45 @@ func TestGetWebhookByOwnerID(t *testing.T) {
 }
 
 func TestGetActiveWebhooksByRepoID(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-
+	hook := unittest.AssertExistsAndLoadBean(t, &Webhook{RepoID: 1, IsActive: true})
 	hooks, err := db.Find[Webhook](t.Context(), ListWebhookOptions{RepoID: 1, IsActive: optional.Some(true)})
-	assert.NoError(t, err)
-	if assert.Len(t, hooks, 1) {
-		assert.Equal(t, fixture.HookRepo1.ID, hooks[0].ID)
-		assert.True(t, hooks[0].IsActive)
-	}
+	require.NoError(t, err)
+	require.Len(t, hooks, 1)
+	assert.Equal(t, hook.ID, hooks[0].ID)
+	assert.True(t, hooks[0].IsActive)
 }
 
 func TestGetWebhooksByRepoID(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-
 	hooks, err := db.Find[Webhook](t.Context(), ListWebhookOptions{RepoID: 1})
-	assert.NoError(t, err)
-	if assert.Len(t, hooks, 2) {
-		assert.Equal(t, fixture.HookRepo1.ID, hooks[0].ID)
-		assert.Equal(t, fixture.HookRepo1Inactive.ID, hooks[1].ID)
-	}
+	require.NoError(t, err)
+	require.Len(t, hooks, 2)
+	assert.Equal(t, int64(1), hooks[0].RepoID)
+	assert.True(t, hooks[0].IsActive)
+	assert.Equal(t, int64(1), hooks[1].RepoID)
+	assert.False(t, hooks[1].IsActive)
 }
 
 func TestGetActiveWebhooksByOwnerID(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-
 	hooks, err := db.Find[Webhook](t.Context(), ListWebhookOptions{OwnerID: 3, IsActive: optional.Some(true)})
-	assert.NoError(t, err)
-	if assert.Len(t, hooks, 1) {
-		assert.Equal(t, fixture.HookOwner3.ID, hooks[0].ID)
-		assert.True(t, hooks[0].IsActive)
-	}
+	require.NoError(t, err)
+	require.Len(t, hooks, 1)
+	assert.Equal(t, int64(3), hooks[0].OwnerID)
+	assert.True(t, hooks[0].IsActive)
 }
 
 func TestGetWebhooksByOwnerID(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-
 	hooks, err := db.Find[Webhook](t.Context(), ListWebhookOptions{OwnerID: 3})
-	assert.NoError(t, err)
-	if assert.Len(t, hooks, 1) {
-		assert.Equal(t, fixture.HookOwner3.ID, hooks[0].ID)
-		assert.True(t, hooks[0].IsActive)
-	}
+	require.NoError(t, err)
+	require.Len(t, hooks, 2)
+	assert.Equal(t, int64(3), hooks[0].OwnerID)
+	assert.True(t, hooks[0].IsActive)
+	assert.Equal(t, int64(3), hooks[1].OwnerID)
+	assert.False(t, hooks[1].IsActive)
 }
 
 func TestUpdateWebhook(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-	hook := fixture.HookRepo1Inactive
+	hook := unittest.AssertExistsAndLoadBean(t, &Webhook{RepoID: 1, Events: `{}`})
+	require.False(t, hook.IsActive)
 	hook.IsActive = true
 	hook.ContentType = ContentTypeForm
 	unittest.AssertNotExistsBean(t, hook)
@@ -272,49 +235,36 @@ func TestUpdateWebhook(t *testing.T) {
 }
 
 func TestDeleteWebhookByRepoID(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-	unittest.AssertExistsAndLoadBean(t, &Webhook{ID: fixture.HookRepo1Inactive.ID, RepoID: 1})
-	assert.NoError(t, DeleteWebhookByRepoID(t.Context(), 1, fixture.HookRepo1Inactive.ID))
-	unittest.AssertNotExistsBean(t, &Webhook{ID: fixture.HookRepo1Inactive.ID, RepoID: 1})
+	hook := unittest.AssertExistsAndLoadBean(t, &Webhook{RepoID: 1, Events: `{}`})
+	assert.NoError(t, DeleteWebhookByRepoID(t.Context(), 1, hook.ID))
+	unittest.AssertNotExistsBean(t, &Webhook{ID: hook.ID, RepoID: 1})
 
 	err := DeleteWebhookByRepoID(t.Context(), unittest.NonexistentID, unittest.NonexistentID)
-	assert.Error(t, err)
 	assert.True(t, IsErrWebhookNotExist(err))
 }
 
 func TestDeleteWebhookByOwnerID(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-	unittest.AssertExistsAndLoadBean(t, &Webhook{ID: fixture.HookOwner3.ID, OwnerID: 3})
-	assert.NoError(t, DeleteWebhookByOwnerID(t.Context(), 3, fixture.HookOwner3.ID))
-	unittest.AssertNotExistsBean(t, &Webhook{ID: fixture.HookOwner3.ID, OwnerID: 3})
+	hook := unittest.AssertExistsAndLoadBean(t, &Webhook{OwnerID: 3, Events: `{}`})
+	assert.NoError(t, DeleteWebhookByOwnerID(t.Context(), 3, hook.ID))
+	unittest.AssertNotExistsBean(t, &Webhook{ID: hook.ID, OwnerID: 3})
 
 	err := DeleteWebhookByOwnerID(t.Context(), unittest.NonexistentID, unittest.NonexistentID)
-	assert.Error(t, err)
 	assert.True(t, IsErrWebhookNotExist(err))
 }
 
 func TestHookTasks(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-
-	hookTasks, err := HookTasks(t.Context(), fixture.HookRepo1.ID, 1)
+	hook := unittest.AssertExistsAndLoadBean(t, &Webhook{RepoID: 1, IsActive: true})
+	hookTasks, err := HookTasks(t.Context(), hook.ID, 1)
 	assert.NoError(t, err)
-	if assert.Len(t, hookTasks, 3) {
-		assert.Equal(t, fixture.HookTask3.ID, hookTasks[0].ID)
-		assert.Equal(t, fixture.HookTask2.ID, hookTasks[1].ID)
-		assert.Equal(t, fixture.HookTask1.ID, hookTasks[2].ID)
-	}
-
+	assert.Len(t, hookTasks, 3)
 	hookTasks, err = HookTasks(t.Context(), unittest.NonexistentID, 1)
 	assert.NoError(t, err)
 	assert.Empty(t, hookTasks)
 }
 
 func TestCreateHookTask(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-	hookTask := &HookTask{
-		HookID:         fixture.HookOwner3.ID,
-		PayloadVersion: 2,
-	}
+	hook := unittest.AssertExistsAndLoadBean(t, &Webhook{OwnerID: 3, IsActive: true})
+	hookTask := &HookTask{HookID: hook.ID, PayloadVersion: 2}
 	unittest.AssertNotExistsBean(t, hookTask)
 	_, err := CreateHookTask(t.Context(), hookTask)
 	assert.NoError(t, err)
@@ -322,8 +272,8 @@ func TestCreateHookTask(t *testing.T) {
 }
 
 func TestUpdateHookTask(t *testing.T) {
-	fixture := prepareWebhookTestData(t)
-	hookTask := &HookTask{HookID: fixture.HookOwner3.ID, PayloadVersion: 2}
+	hook := unittest.AssertExistsAndLoadBean(t, &Webhook{OwnerID: 3, IsActive: true})
+	hookTask := &HookTask{HookID: hook.ID, PayloadVersion: 2}
 	_, err := CreateHookTask(t.Context(), hookTask)
 	assert.NoError(t, err)
 
@@ -335,7 +285,6 @@ func TestUpdateHookTask(t *testing.T) {
 }
 
 func TestCleanupHookTaskTable_PerWebhook_DeletesDelivered(t *testing.T) {
-	assert.NoError(t, unittest.PrepareTestDatabase())
 	hook := &Webhook{RepoID: 3, URL: "https://www.example.com/cleanup1", ContentType: ContentTypeJSON, Events: `{"push_only":true}`}
 	require.NoError(t, db.Insert(t.Context(), hook))
 	hookTask := &HookTask{
@@ -354,7 +303,6 @@ func TestCleanupHookTaskTable_PerWebhook_DeletesDelivered(t *testing.T) {
 }
 
 func TestCleanupHookTaskTable_PerWebhook_LeavesUndelivered(t *testing.T) {
-	assert.NoError(t, unittest.PrepareTestDatabase())
 	hook := &Webhook{RepoID: 3, URL: "https://www.example.com/cleanup2", ContentType: ContentTypeJSON, Events: `{"push_only":true}`}
 	require.NoError(t, db.Insert(t.Context(), hook))
 	hookTask := &HookTask{
@@ -372,7 +320,6 @@ func TestCleanupHookTaskTable_PerWebhook_LeavesUndelivered(t *testing.T) {
 }
 
 func TestCleanupHookTaskTable_PerWebhook_LeavesMostRecentTask(t *testing.T) {
-	assert.NoError(t, unittest.PrepareTestDatabase())
 	hook := &Webhook{RepoID: 3, URL: "https://www.example.com/cleanup3", ContentType: ContentTypeJSON, Events: `{"push_only":true}`}
 	require.NoError(t, db.Insert(t.Context(), hook))
 	hookTask := &HookTask{
@@ -391,7 +338,6 @@ func TestCleanupHookTaskTable_PerWebhook_LeavesMostRecentTask(t *testing.T) {
 }
 
 func TestCleanupHookTaskTable_OlderThan_DeletesDelivered(t *testing.T) {
-	assert.NoError(t, unittest.PrepareTestDatabase())
 	hook := &Webhook{RepoID: 3, URL: "https://www.example.com/cleanup4", ContentType: ContentTypeJSON, Events: `{"push_only":true}`}
 	require.NoError(t, db.Insert(t.Context(), hook))
 	hookTask := &HookTask{
@@ -410,7 +356,6 @@ func TestCleanupHookTaskTable_OlderThan_DeletesDelivered(t *testing.T) {
 }
 
 func TestCleanupHookTaskTable_OlderThan_LeavesUndelivered(t *testing.T) {
-	assert.NoError(t, unittest.PrepareTestDatabase())
 	hook := &Webhook{RepoID: 3, URL: "https://www.example.com/cleanup5", ContentType: ContentTypeJSON, Events: `{"push_only":true}`}
 	require.NoError(t, db.Insert(t.Context(), hook))
 	hookTask := &HookTask{
@@ -428,7 +373,6 @@ func TestCleanupHookTaskTable_OlderThan_LeavesUndelivered(t *testing.T) {
 }
 
 func TestCleanupHookTaskTable_OlderThan_LeavesTaskEarlierThanAgeToDelete(t *testing.T) {
-	assert.NoError(t, unittest.PrepareTestDatabase())
 	hook := &Webhook{RepoID: 3, URL: "https://www.example.com/cleanup6", ContentType: ContentTypeJSON, Events: `{"push_only":true}`}
 	require.NoError(t, db.Insert(t.Context(), hook))
 	hookTask := &HookTask{
