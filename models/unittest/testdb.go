@@ -19,6 +19,7 @@ import (
 	"code.gitea.io/gitea/modules/setting/config"
 	"code.gitea.io/gitea/modules/storage"
 	"code.gitea.io/gitea/modules/tempdir"
+	"code.gitea.io/gitea/modules/testlogger"
 	"code.gitea.io/gitea/modules/util"
 
 	"github.com/stretchr/testify/assert"
@@ -40,29 +41,21 @@ func MainTest(m *testing.M, testOptsArg ...*TestOptions) {
 }
 
 func mainTest(m *testing.M, testOptsArg ...*TestOptions) int {
-	reportError := func(msg string, a ...any) int {
-		_, _ = fmt.Fprintf(os.Stderr, msg+"\n", a...)
-		return 1
-	}
-
 	testOpts := util.OptionalArg(testOptsArg, &TestOptions{})
 
 	tempWorkPath, tempCleanup, err := tempdir.OsTempDir("gitea-test").MkdirTempRandom("unit-test-dir-")
 	if err != nil {
-		return reportError("Failed to create temp dir for unit test: %v", err)
+		return testlogger.MainErrorf("Failed to create temp dir for unit test: %v", err)
 	}
 	defer tempCleanup()
 
 	defer setting.MockBuiltinPaths(tempWorkPath, "", "")()
 	setting.SetupGiteaTestEnv()
-	if setting.RepoRootPath == "" || setting.AppDataPath == "" {
-		return reportError("SetupGiteaTestEnv failed, paths are not initialized")
-	}
 
 	giteaRoot := setting.GetGiteaTestSourceRoot()
 	fixturesOpts := FixturesOptions{Dir: filepath.Join(giteaRoot, "models", "fixtures"), Files: testOpts.FixtureFiles}
 	if err := CreateTestEngine(fixturesOpts); err != nil {
-		return reportError("Error creating test database engine: %v", err)
+		return testlogger.MainErrorf("Error creating test database engine: %v", err)
 	}
 
 	setting.AppURL = "https://try.gitea.io/"
@@ -80,22 +73,22 @@ func mainTest(m *testing.M, testOptsArg ...*TestOptions) int {
 	config.SetDynGetter(system.NewDatabaseDynKeyGetter())
 
 	if err = cache.Init(); err != nil {
-		return reportError("cache.Init: %v", err)
+		return testlogger.MainErrorf("cache.Init: %v", err)
 	}
 	if err = storage.Init(); err != nil {
-		return reportError("storage.Init: %v", err)
+		return testlogger.MainErrorf("storage.Init: %v", err)
 	}
 	if err = SyncDirs(filepath.Join(giteaRoot, "tests", "gitea-repositories-meta"), setting.RepoRootPath); err != nil {
-		return reportError("util.SyncDirs: %v", err)
+		return testlogger.MainErrorf("util.SyncDirs: %v", err)
 	}
 
 	if err = git.InitFull(); err != nil {
-		return reportError("git.Init: %v", err)
+		return testlogger.MainErrorf("git.Init: %v", err)
 	}
 
 	if testOpts.SetUp != nil {
 		if err := testOpts.SetUp(); err != nil {
-			return reportError("set up failed: %v", err)
+			return testlogger.MainErrorf("set up failed: %v", err)
 		}
 	}
 
@@ -103,7 +96,7 @@ func mainTest(m *testing.M, testOptsArg ...*TestOptions) int {
 
 	if testOpts.TearDown != nil {
 		if err := testOpts.TearDown(); err != nil {
-			return reportError("tear down failed: %v", err)
+			return testlogger.MainErrorf("tear down failed: %v", err)
 		}
 	}
 	return exitStatus

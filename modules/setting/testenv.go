@@ -101,6 +101,10 @@ func SetupGiteaTestEnv() {
 	cleanUpEnv()
 	initWorkPathAndConfig()
 
+	if RepoRootPath == "" || AppDataPath == "" {
+		panic("SetupGiteaTestEnv failed, paths are not initialized")
+	}
+
 	// TODO: some git repo hooks (test fixtures) still use these env variables, need to be refactored in the future
 	_ = os.Setenv("GITEA_ROOT", giteaRoot)
 	_ = os.Setenv("GITEA_CONF", giteaConf) // test fixture git hooks use "$GITEA_ROOT/$GITEA_CONF" in their scripts
