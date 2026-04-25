@@ -279,6 +279,7 @@ func loadServerFrom(rootCfg ConfigProvider) {
 	StaticCacheTime = sec.Key("STATIC_CACHE_TIME").MustDuration(6 * time.Hour)
 	AppDataPath = sec.Key("APP_DATA_PATH").MustString(filepath.Join(AppWorkPath, "data"))
 
+	// FIXME: debug
 	log.Error("Set AppDataPath=%s\n%s\n", AppDataPath, log.Stack(2))
 
 	if !filepath.IsAbs(AppDataPath) {

@@ -66,6 +66,9 @@ func SetupGiteaTestEnv() {
 			customConfBuiltin = filepath.Join(AppWorkPath, giteaConf)
 			CustomConf = customConfBuiltin
 			_ = os.WriteFile(CustomConf, []byte(os.Getenv("GITEA_TEST_CONF_CONTENT")), 0o644)
+
+			// FIXME: debug
+			log.Error("SetupGiteaTestEnv CustomConf=%s\n%s\n%s\n", CustomConf, os.Getenv("GITEA_TEST_CONF_CONTENT"), log.Stack(2))
 		} else {
 			// CustomConf must be absolute path to make tests pass,
 			CustomConf = filepath.Join(AppWorkPath, giteaConf)
