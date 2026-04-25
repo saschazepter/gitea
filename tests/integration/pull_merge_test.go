@@ -294,18 +294,14 @@ func TestPullCleanUpAfterMerge(t *testing.T) {
 
 		// Check PR branch deletion
 		resp = testPullCleanUp(t, session, elem[1], elem[2], elem[4])
-		respJSON := struct {
-			Redirect string
-		}{}
-		DecodeJSON(t, resp, &respJSON)
+		respJSON := test.ParseJSONRedirect(resp.Body.Bytes())
+		require.NotEmpty(t, respJSON.Redirect, "Redirected URL is not found")
 
-		assert.NotEmpty(t, respJSON.Redirect, "Redirected URL is not found")
-
-		elem = strings.Split(respJSON.Redirect, "/")
+		elem = strings.Split(*respJSON.Redirect, "/")
 		assert.Equal(t, "pulls", elem[3])
 
 		// Check branch deletion result
-		req := NewRequest(t, "GET", respJSON.Redirect)
+		req := NewRequest(t, "GET", *respJSON.Redirect)
 		resp = session.MakeRequest(t, req, http.StatusOK)
 
 		htmlDoc := NewHTMLParser(t, resp.Body)
@@ -758,8 +754,7 @@ func TestPullMergeIndexerNotifier(t *testing.T) {
 
 		// search issues
 		searchIssuesResp := session.MakeRequest(t, NewRequest(t, "GET", link.String()), http.StatusOK)
-		var apiIssuesBefore []*api.Issue
-		DecodeJSON(t, searchIssuesResp, &apiIssuesBefore)
+		apiIssuesBefore := DecodeJSON(t, searchIssuesResp, []*api.Issue{})
 		assert.Empty(t, apiIssuesBefore)
 
 		// merge the pull request
@@ -781,11 +776,9 @@ func TestPullMergeIndexerNotifier(t *testing.T) {
 
 		// search issues again
 		searchIssuesResp = session.MakeRequest(t, NewRequest(t, "GET", link.String()), http.StatusOK)
-		var apiIssuesAfter []*api.Issue
-		DecodeJSON(t, searchIssuesResp, &apiIssuesAfter)
-		if assert.Len(t, apiIssuesAfter, 1) {
-			assert.Equal(t, issue.ID, apiIssuesAfter[0].ID)
-		}
+		apiIssuesAfter := DecodeJSON(t, searchIssuesResp, []*api.Issue{})
+		require.Len(t, apiIssuesAfter, 1)
+		assert.Equal(t, issue.ID, apiIssuesAfter[0].ID)
 	})
 }
 
