@@ -95,7 +95,7 @@ func testMain(m *testing.M) int {
 
 	err = unittest.InitFixtures(
 		unittest.FixturesOptions{
-			Dir: filepath.Join(filepath.Dir(setting.AppPath), "models/fixtures/"),
+			Dir: filepath.Join(setting.GetGiteaTestSourceRoot(), "models/fixtures/"),
 		},
 	)
 	if err != nil {

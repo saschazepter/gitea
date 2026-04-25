@@ -156,7 +156,7 @@ func PrepareGitRepoDirectory(t testing.TB) {
 	if !assert.NotEmpty(t, setting.RepoRootPath) {
 		return
 	}
-	assert.NoError(t, unittest.SyncDirs(filepath.Join(filepath.Dir(setting.AppPath), "tests/gitea-repositories-meta"), setting.RepoRootPath))
+	assert.NoError(t, unittest.SyncDirs(filepath.Join(setting.GetGiteaTestSourceRoot(), "tests/gitea-repositories-meta"), setting.RepoRootPath))
 }
 
 func PrepareArtifactsStorage(t testing.TB) {

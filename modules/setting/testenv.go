@@ -12,6 +12,7 @@ import (
 
 	"code.gitea.io/gitea/modules/auth/password/hash"
 	"code.gitea.io/gitea/modules/log"
+	"code.gitea.io/gitea/modules/util"
 )
 
 var giteaTestSourceRoot *string
@@ -50,7 +51,11 @@ func SetupGiteaTestEnv() {
 	}
 
 	initGiteaPaths := func() {
-		StaticRootPath = *giteaTestSourceRoot // need to load assets (options, public) from the source code directory for testing
+		// need to load assets (options, public) from the source code directory for testing
+		StaticRootPath = *giteaTestSourceRoot
+		// during testing, the AppPath must point to the pre-built Gitea binary in the source root
+		// it needs to be called by git hooks
+		AppPath = filepath.Join(*giteaTestSourceRoot, "gitea") + util.Iif(IsWindows, ".exe", "")
 	}
 
 	initGiteaConf := func() string {
