@@ -57,6 +57,7 @@ func prepareWebhookTestData(t *testing.T) *webhookTestFixtures {
 
 	hookOwner3 := &Webhook{
 		OwnerID:     3,
+		RepoID:      3,
 		URL:         "https://www.example.com/url3",
 		ContentType: ContentTypeJSON,
 		Events:      `{"push_only":false,"choose_events":false,"events":{"create":false,"push":true,"pull_request":true}}`,
@@ -272,9 +273,9 @@ func TestUpdateWebhook(t *testing.T) {
 
 func TestDeleteWebhookByRepoID(t *testing.T) {
 	fixture := prepareWebhookTestData(t)
-	unittest.AssertExistsAndLoadBean(t, &Webhook{ID: fixture.HookRepo1.ID, RepoID: 1})
-	assert.NoError(t, DeleteWebhookByRepoID(t.Context(), 1, fixture.HookRepo1.ID))
-	unittest.AssertNotExistsBean(t, &Webhook{ID: fixture.HookRepo1.ID, RepoID: 1})
+	unittest.AssertExistsAndLoadBean(t, &Webhook{ID: fixture.HookRepo1Inactive.ID, RepoID: 1})
+	assert.NoError(t, DeleteWebhookByRepoID(t.Context(), 1, fixture.HookRepo1Inactive.ID))
+	unittest.AssertNotExistsBean(t, &Webhook{ID: fixture.HookRepo1Inactive.ID, RepoID: 1})
 
 	err := DeleteWebhookByRepoID(t.Context(), unittest.NonexistentID, unittest.NonexistentID)
 	assert.Error(t, err)
