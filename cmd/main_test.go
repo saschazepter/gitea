@@ -7,9 +7,15 @@ import (
 	"context"
 	"testing"
 
+	"code.gitea.io/gitea/models/unittest"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli/v3"
 )
+
+func TestMain(m *testing.M) {
+	unittest.MainTest(m)
+}
 
 func TestDefaultCommand(t *testing.T) {
 	test := func(t *testing.T, args []string, expectedRetName string, expectedRetValid bool) {
