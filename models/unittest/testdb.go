@@ -47,7 +47,13 @@ func mainTest(m *testing.M, testOptsArg ...*TestOptions) int {
 	if err != nil {
 		testlogger.Panicf("TempDir: %v\n", err)
 	}
-	defer appDataCleanup()
+
+	// FIXME: debug
+	_, _ = fmt.Fprintf(os.Stderr, "Prepare APP_DATA_PATH for SetupGiteaTestEnv: %s\n", appDataPath)
+	defer func() {
+		_, _ = fmt.Fprintf(os.Stderr, "Remove APP_DATA_PATH for SetupGiteaTestEnv: %s\n", appDataPath)
+		appDataCleanup()
+	}()
 	_ = os.Setenv("GITEA_TEST_CONF_CONTENT", `
 [server]
 APP_DATA_PATH = `+appDataPath+`
