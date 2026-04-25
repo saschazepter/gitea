@@ -64,8 +64,9 @@ func SetupGiteaTestEnv() {
 			CustomConf = customConfBuiltin
 			_ = os.Remove(CustomConf)
 		} else {
-			// CustomConf must be absolute path to make tests pass,
-			CustomConf = filepath.Join(AppWorkPath, giteaConf)
+			// CustomConf must be absolute path to make tests pass.
+			// At the moment, GITEA_TEST_CONF is always in Gitea's source root
+			CustomConf = filepath.Join(*giteaTestSourceRoot, giteaConf)
 		}
 		return giteaConf
 	}

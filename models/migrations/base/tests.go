@@ -75,7 +75,7 @@ func deleteDB() error {
 		}
 		db.Close()
 
-		// Check if we need to setup a specific schema
+		// Check if we need to set up a specific schema
 		if len(setting.Database.Schema) != 0 {
 			db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
 				setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.Name, setting.Database.SSLMode))
@@ -167,7 +167,7 @@ func PrepareTestEnv(t *testing.T, skip int, syncModels ...any) (*xorm.Engine, fu
 		}
 	}
 
-	fixturesDir := filepath.Join(filepath.Dir(setting.AppPath), "models", "migrations", "fixtures", t.Name())
+	fixturesDir := filepath.Join(giteaRoot, "models", "migrations", "fixtures", t.Name())
 
 	if _, err := os.Stat(fixturesDir); err == nil {
 		t.Logf("initializing fixtures from: %s", fixturesDir)
