@@ -4,8 +4,8 @@
 package repo
 
 import (
-	"fmt"
 	"net/http"
+	"strconv"
 	"testing"
 
 	"code.gitea.io/gitea/models/db"
@@ -29,7 +29,7 @@ func TestTestHook(t *testing.T) {
 	assert.NoError(t, db.Insert(t.Context(), hook))
 
 	ctx, _ := contexttest.MockAPIContext(t, "user2/repo1/wiki/_pages")
-	ctx.SetPathParam("id", fmt.Sprintf("%d", hook.ID))
+	ctx.SetPathParam("id", strconv.FormatInt(hook.ID, 10))
 	contexttest.LoadRepo(t, ctx, 1)
 	contexttest.LoadRepoCommit(t, ctx)
 	contexttest.LoadUser(t, ctx, 2)
