@@ -4,6 +4,7 @@
 package repo
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -17,8 +18,17 @@ import (
 func TestTestHook(t *testing.T) {
 	unittest.PrepareTestEnv(t)
 
+	hook := &webhook.Webhook{
+		RepoID:      1,
+		URL:         "https://www.example.com/test_hook",
+		ContentType: webhook.ContentTypeJSON,
+		Events:      `{"push_only":true}`,
+		IsActive:    true,
+	}
+	assert.NoError(t, webhook.CreateWebhook(t.Context(), hook))
+
 	ctx, _ := contexttest.MockAPIContext(t, "user2/repo1/wiki/_pages")
-	ctx.SetPathParam("id", "1")
+	ctx.SetPathParam("id", fmt.Sprintf("%d", hook.ID))
 	contexttest.LoadRepo(t, ctx, 1)
 	contexttest.LoadRepoCommit(t, ctx)
 	contexttest.LoadUser(t, ctx, 2)
@@ -26,6 +36,6 @@ func TestTestHook(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, ctx.Resp.WrittenStatus())
 
 	unittest.AssertExistsAndLoadBean(t, &webhook.HookTask{
-		HookID: 1,
+		HookID: hook.ID,
 	}, unittest.Cond("is_delivered=?", false))
 }

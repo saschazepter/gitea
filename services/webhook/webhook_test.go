@@ -37,50 +37,58 @@ func TestPrepareWebhooks(t *testing.T) {
 	assert.NoError(t, unittest.PrepareTestDatabase())
 
 	repo := unittest.AssertExistsAndLoadBean(t, &repo_model.Repository{ID: 1})
-	hookTasks := []*webhook_model.HookTask{
-		{HookID: 1, EventType: webhook_module.HookEventPush},
+	hook := &webhook_model.Webhook{
+		RepoID:      repo.ID,
+		URL:         "https://www.example.com/prepare_webhooks",
+		ContentType: webhook_model.ContentTypeJSON,
+		Events:      `{"push_only":true}`,
+		IsActive:    true,
 	}
-	for _, hookTask := range hookTasks {
-		unittest.AssertNotExistsBean(t, hookTask)
-	}
+	assert.NoError(t, webhook_model.CreateWebhook(t.Context(), hook))
+
+	hookTask := &webhook_model.HookTask{HookID: hook.ID, EventType: webhook_module.HookEventPush}
+	unittest.AssertNotExistsBean(t, hookTask)
 	assert.NoError(t, PrepareWebhooks(t.Context(), EventSource{Repository: repo}, webhook_module.HookEventPush, &api.PushPayload{Commits: []*api.PayloadCommit{{}}}))
-	for _, hookTask := range hookTasks {
-		unittest.AssertExistsAndLoadBean(t, hookTask)
-	}
+	unittest.AssertExistsAndLoadBean(t, hookTask)
 }
 
 func TestPrepareWebhooksBranchFilterMatch(t *testing.T) {
 	assert.NoError(t, unittest.PrepareTestDatabase())
 
 	repo := unittest.AssertExistsAndLoadBean(t, &repo_model.Repository{ID: 2})
-	hookTasks := []*webhook_model.HookTask{
-		{HookID: 4, EventType: webhook_module.HookEventPush},
+	hook := &webhook_model.Webhook{
+		RepoID:      repo.ID,
+		URL:         "https://www.example.com/branch_filter_match",
+		ContentType: webhook_model.ContentTypeJSON,
+		Events:      `{"push_only":true,"branch_filter":"{master,feature*}"}`,
+		IsActive:    true,
 	}
-	for _, hookTask := range hookTasks {
-		unittest.AssertNotExistsBean(t, hookTask)
-	}
+	assert.NoError(t, webhook_model.CreateWebhook(t.Context(), hook))
+
+	hookTask := &webhook_model.HookTask{HookID: hook.ID, EventType: webhook_module.HookEventPush}
+	unittest.AssertNotExistsBean(t, hookTask)
 	// this test also ensures that * doesn't handle / in any special way (like shell would)
 	assert.NoError(t, PrepareWebhooks(t.Context(), EventSource{Repository: repo}, webhook_module.HookEventPush, &api.PushPayload{Ref: "refs/heads/feature/7791", Commits: []*api.PayloadCommit{{}}}))
-	for _, hookTask := range hookTasks {
-		unittest.AssertExistsAndLoadBean(t, hookTask)
-	}
+	unittest.AssertExistsAndLoadBean(t, hookTask)
 }
 
 func TestPrepareWebhooksBranchFilterNoMatch(t *testing.T) {
 	assert.NoError(t, unittest.PrepareTestDatabase())
 
 	repo := unittest.AssertExistsAndLoadBean(t, &repo_model.Repository{ID: 2})
-	hookTasks := []*webhook_model.HookTask{
-		{HookID: 4, EventType: webhook_module.HookEventPush},
+	hook := &webhook_model.Webhook{
+		RepoID:      repo.ID,
+		URL:         "https://www.example.com/branch_filter_no_match",
+		ContentType: webhook_model.ContentTypeJSON,
+		Events:      `{"push_only":true,"branch_filter":"{master,feature*}"}`,
+		IsActive:    true,
 	}
-	for _, hookTask := range hookTasks {
-		unittest.AssertNotExistsBean(t, hookTask)
-	}
-	assert.NoError(t, PrepareWebhooks(t.Context(), EventSource{Repository: repo}, webhook_module.HookEventPush, &api.PushPayload{Ref: "refs/heads/fix_weird_bug"}))
+	assert.NoError(t, webhook_model.CreateWebhook(t.Context(), hook))
 
-	for _, hookTask := range hookTasks {
-		unittest.AssertNotExistsBean(t, hookTask)
-	}
+	hookTask := &webhook_model.HookTask{HookID: hook.ID, EventType: webhook_module.HookEventPush}
+	unittest.AssertNotExistsBean(t, hookTask)
+	assert.NoError(t, PrepareWebhooks(t.Context(), EventSource{Repository: repo}, webhook_module.HookEventPush, &api.PushPayload{Ref: "refs/heads/fix_weird_bug"}))
+	unittest.AssertNotExistsBean(t, hookTask)
 }
 
 func TestWebhookUserMail(t *testing.T) {
