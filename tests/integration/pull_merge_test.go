@@ -17,6 +17,7 @@ import (
 	"time"
 
 	auth_model "code.gitea.io/gitea/models/auth"
+	"code.gitea.io/gitea/models/db"
 	git_model "code.gitea.io/gitea/models/git"
 	issues_model "code.gitea.io/gitea/models/issues"
 	pull_model "code.gitea.io/gitea/models/pull"
@@ -92,12 +93,24 @@ func testPullCleanUp(t *testing.T, session *TestSession, user, repo, pullnum str
 	return resp
 }
 
+func preparePullMergeWebhook(t *testing.T, repoID int64) {
+	require.NoError(t, db.TruncateBeans(t.Context(), &webhook.Webhook{}, &webhook.HookTask{}))
+	require.NoError(t, db.Insert(t.Context(), &webhook.Webhook{
+		RepoID:      1,
+		URL:         "https://www.example.com/url1",
+		ContentType: webhook.ContentTypeJSON,
+		Events:      `{"push_only":true,"send_everything":false,"choose_events":false,"events":{"create":false,"push":true,"pull_request":false}}`,
+		IsActive:    true,
+	}))
+}
+
+func assertPullMergeWebhookTask(t *testing.T) {
+	unittest.AssertExistsAndLoadBean(t, &webhook.HookTask{HookID: 1})
+}
+
 func TestPullMerge(t *testing.T) {
 	onGiteaRun(t, func(t *testing.T, giteaURL *url.URL) {
-		hookTasks, err := webhook.HookTasks(t.Context(), 1, 1) // Retrieve previous hook number
-		assert.NoError(t, err)
-		hookTasksLenBefore := len(hookTasks)
-
+		preparePullMergeWebhook(t, 1)
 		session := loginUser(t, "user1") // FIXME: don't use admin user for testing
 		testRepoFork(t, session, "user2", "repo1", "user1", "repo1", "")
 		testEditFile(t, session, "user1", "repo1", "master", "README.md", "Hello, World (Edited)\n")
@@ -123,18 +136,13 @@ func TestPullMerge(t *testing.T) {
 		assert.Equal(t, 4, repo.NumPulls)
 		assert.Equal(t, 3, repo.NumOpenPulls)
 
-		hookTasks, err = webhook.HookTasks(t.Context(), 1, 1)
-		assert.NoError(t, err)
-		assert.Len(t, hookTasks, hookTasksLenBefore+1)
+		assertPullMergeWebhookTask(t)
 	})
 }
 
 func TestPullRebase(t *testing.T) {
 	onGiteaRun(t, func(t *testing.T, giteaURL *url.URL) {
-		hookTasks, err := webhook.HookTasks(t.Context(), 1, 1) // Retrieve previous hook number
-		assert.NoError(t, err)
-		hookTasksLenBefore := len(hookTasks)
-
+		preparePullMergeWebhook(t, 1)
 		session := loginUser(t, "user1") // FIXME: don't use admin user for testing
 		testRepoFork(t, session, "user2", "repo1", "user1", "repo1", "")
 		testEditFile(t, session, "user1", "repo1", "master", "README.md", "Hello, World (Edited)\n")
@@ -160,18 +168,13 @@ func TestPullRebase(t *testing.T) {
 		assert.Equal(t, 4, repo.NumPulls)
 		assert.Equal(t, 3, repo.NumOpenPulls)
 
-		hookTasks, err = webhook.HookTasks(t.Context(), 1, 1)
-		assert.NoError(t, err)
-		assert.Len(t, hookTasks, hookTasksLenBefore+1)
+		assertPullMergeWebhookTask(t)
 	})
 }
 
 func TestPullRebaseMerge(t *testing.T) {
 	onGiteaRun(t, func(t *testing.T, giteaURL *url.URL) {
-		hookTasks, err := webhook.HookTasks(t.Context(), 1, 1) // Retrieve previous hook number
-		assert.NoError(t, err)
-		hookTasksLenBefore := len(hookTasks)
-
+		preparePullMergeWebhook(t, 1)
 		session := loginUser(t, "user1") // FIXME: don't use admin user for testing
 		testRepoFork(t, session, "user2", "repo1", "user1", "repo1", "")
 		testEditFile(t, session, "user1", "repo1", "master", "README.md", "Hello, World (Edited)\n")
@@ -197,18 +200,13 @@ func TestPullRebaseMerge(t *testing.T) {
 		assert.Equal(t, 4, repo.NumPulls)
 		assert.Equal(t, 3, repo.NumOpenPulls)
 
-		hookTasks, err = webhook.HookTasks(t.Context(), 1, 1)
-		assert.NoError(t, err)
-		assert.Len(t, hookTasks, hookTasksLenBefore+1)
+		assertPullMergeWebhookTask(t)
 	})
 }
 
 func TestPullSquash(t *testing.T) {
 	onGiteaRun(t, func(t *testing.T, giteaURL *url.URL) {
-		hookTasks, err := webhook.HookTasks(t.Context(), 1, 1) // Retrieve previous hook number
-		assert.NoError(t, err)
-		hookTasksLenBefore := len(hookTasks)
-
+		preparePullMergeWebhook(t, 1)
 		session := loginUser(t, "user1") // FIXME: don't use admin user for testing
 		testRepoFork(t, session, "user2", "repo1", "user1", "repo1", "")
 		testEditFile(t, session, "user1", "repo1", "master", "README.md", "Hello, World (Edited)\n")
@@ -223,18 +221,13 @@ func TestPullSquash(t *testing.T) {
 			DeleteBranch: false,
 		})
 
-		hookTasks, err = webhook.HookTasks(t.Context(), 1, 1)
-		assert.NoError(t, err)
-		assert.Len(t, hookTasks, hookTasksLenBefore+1)
+		assertPullMergeWebhookTask(t)
 	})
 }
 
 func TestPullSquashWithHeadCommitID(t *testing.T) {
 	onGiteaRun(t, func(t *testing.T, giteaURL *url.URL) {
-		hookTasks, err := webhook.HookTasks(t.Context(), 1, 1) // Retrieve previous hook number
-		assert.NoError(t, err)
-		hookTasksLenBefore := len(hookTasks)
-
+		preparePullMergeWebhook(t, 1)
 		session := loginUser(t, "user1") // FIXME: don't use admin user for testing
 		testRepoFork(t, session, "user2", "repo1", "user1", "repo1", "")
 		testEditFile(t, session, "user1", "repo1", "master", "README.md", "Hello, World (Edited)\n")
@@ -267,9 +260,7 @@ func TestPullSquashWithHeadCommitID(t *testing.T) {
 		assert.Equal(t, 4, repo.NumPulls)
 		assert.Equal(t, 3, repo.NumOpenPulls)
 
-		hookTasks, err = webhook.HookTasks(t.Context(), 1, 1)
-		assert.NoError(t, err)
-		assert.Len(t, hookTasks, hookTasksLenBefore+1)
+		assertPullMergeWebhookTask(t)
 	})
 }
 
