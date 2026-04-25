@@ -50,7 +50,7 @@ func mainTest(m *testing.M, testOptsArg ...*TestOptions) int {
 	defer appDataCleanup()
 	_ = os.Setenv("GITEA_TEST_CONF_CONTENT", `
 [server]
-APP_DATA_PATH = "`+appDataPath+`"
+APP_DATA_PATH = `+appDataPath+`
 `)
 	setting.SetupGiteaTestEnv()
 	if setting.RepoRootPath == "" || setting.AppDataPath == "" {

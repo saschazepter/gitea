@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 // Tests here reload the config system multiple times with uncontrollable details.
-// So it must be in a separate package, to avoid affect other tests
+// So it must be in a separate package, to avoid affecting other tests
 
 package cmdtest
 
