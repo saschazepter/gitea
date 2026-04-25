@@ -280,7 +280,8 @@ func loadServerFrom(rootCfg ConfigProvider) {
 	AppDataPath = sec.Key("APP_DATA_PATH").MustString(filepath.Join(AppWorkPath, "data"))
 
 	// FIXME: debug
-	log.Error("Set AppDataPath=%s\n%s\n", AppDataPath, log.Stack(2))
+	bufCustomConf, _ := os.ReadFile(CustomConf)
+	log.Error("Set AppDataPath=%s (CustomConf=%s)\n%s\n%s\n", AppDataPath, CustomConf, string(bufCustomConf), log.Stack(2))
 
 	if !filepath.IsAbs(AppDataPath) {
 		AppDataPath = filepath.ToSlash(filepath.Join(AppWorkPath, AppDataPath))
