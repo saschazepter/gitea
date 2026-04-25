@@ -15,6 +15,7 @@ import (
 	"code.gitea.io/gitea/models/system"
 	"code.gitea.io/gitea/modules/cache"
 	"code.gitea.io/gitea/modules/git"
+	"code.gitea.io/gitea/modules/log"
 	"code.gitea.io/gitea/modules/setting"
 	"code.gitea.io/gitea/modules/setting/config"
 	"code.gitea.io/gitea/modules/storage"
@@ -57,6 +58,8 @@ APP_DATA_PATH = `+appDataPath+`
 		_, _ = fmt.Fprintln(os.Stderr, "SetupGiteaTestEnv failed, paths are not initialized")
 		os.Exit(1)
 	}
+
+	_, _ = fmt.Fprintf(os.Stderr, "mainTest: %s\n%s\n", appDataPath, log.Stack(2))
 
 	giteaRoot := setting.GetGiteaTestSourceRoot()
 	fixturesOpts := FixturesOptions{Dir: filepath.Join(giteaRoot, "models", "fixtures"), Files: testOpts.FixtureFiles}
