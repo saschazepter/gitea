@@ -21,6 +21,19 @@ func GetGiteaTestSourceRoot() string {
 	return *giteaTestSourceRoot
 }
 
+func DebugAppendLog(msg string, a ...any) {
+	f, _ := os.OpenFile("/tmp/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if f != nil {
+		defer f.Close()
+		fmt.Fprintf(f, msg+"\n", a...)
+	}
+}
+
+func DebugGetLogs() string {
+	buf, _ := os.ReadFile("/tmp/debug.log")
+	return string(buf)
+}
+
 func SetupGiteaTestEnv() {
 	if giteaTestSourceRoot != nil {
 		return // already initialized
@@ -69,6 +82,7 @@ func SetupGiteaTestEnv() {
 
 			// FIXME: debug
 			log.Error("SetupGiteaTestEnv CustomConf=%s\n%s\n%s\n", CustomConf, os.Getenv("GITEA_TEST_CONF_CONTENT"), log.Stack(2))
+			DebugAppendLog("SetupGiteaTestEnv CustomConf=%s\n%s\n%s\n", CustomConf, os.Getenv("GITEA_TEST_CONF_CONTENT"), log.Stack(2))
 		} else {
 			// CustomConf must be absolute path to make tests pass,
 			CustomConf = filepath.Join(AppWorkPath, giteaConf)

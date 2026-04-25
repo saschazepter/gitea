@@ -19,7 +19,6 @@ import (
 	"code.gitea.io/gitea/modules/setting/config"
 	"code.gitea.io/gitea/modules/storage"
 	"code.gitea.io/gitea/modules/tempdir"
-	"code.gitea.io/gitea/modules/testlogger"
 	"code.gitea.io/gitea/modules/util"
 
 	"github.com/stretchr/testify/assert"
@@ -41,34 +40,40 @@ func MainTest(m *testing.M, testOptsArg ...*TestOptions) {
 }
 
 func mainTest(m *testing.M, testOptsArg ...*TestOptions) int {
+	reportError := func(msg string, a ...any) int {
+		_, _ = fmt.Fprintf(os.Stderr, msg+"\n", a...)
+		return 1
+	}
+
 	testOpts := util.OptionalArg(testOptsArg, &TestOptions{})
 
 	appDataPath, appDataCleanup, err := tempdir.OsTempDir("gitea-test").MkdirTempRandom("unit-test-data-")
 	if err != nil {
-		testlogger.Panicf("TempDir: %v\n", err)
+		return reportError("Failed to create temp dir for app data path: %v", err)
 	}
 
 	// FIXME: debug
 	_, _ = fmt.Fprintf(os.Stderr, "Prepare APP_DATA_PATH for SetupGiteaTestEnv: %s\n", appDataPath)
+	setting.DebugAppendLog("Prepare APP_DATA_PATH for SetupGiteaTestEnv: %s", appDataPath)
 	defer func() {
 		_, _ = fmt.Fprintf(os.Stderr, "Remove APP_DATA_PATH for SetupGiteaTestEnv: %s\n", appDataPath)
+		setting.DebugAppendLog("Remove APP_DATA_PATH for SetupGiteaTestEnv: %s", appDataPath)
 		appDataCleanup()
 	}()
+
 	_ = os.Setenv("GITEA_TEST_CONF_CONTENT", `
 [server]
 APP_DATA_PATH = `+appDataPath+`
 `)
 	setting.SetupGiteaTestEnv()
 	if setting.RepoRootPath == "" || setting.AppDataPath == "" {
-		_, _ = fmt.Fprintln(os.Stderr, "SetupGiteaTestEnv failed, paths are not initialized")
-		os.Exit(1)
+		return reportError("SetupGiteaTestEnv failed, paths are not initialized")
 	}
 
 	giteaRoot := setting.GetGiteaTestSourceRoot()
 	fixturesOpts := FixturesOptions{Dir: filepath.Join(giteaRoot, "models", "fixtures"), Files: testOpts.FixtureFiles}
 	if err := CreateTestEngine(fixturesOpts); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Error creating test database engine: %v\n", err)
-		os.Exit(1)
+		return reportError("Error creating test database engine: %v", err)
 	}
 
 	setting.AppURL = "https://try.gitea.io/"
@@ -86,22 +91,22 @@ APP_DATA_PATH = `+appDataPath+`
 	config.SetDynGetter(system.NewDatabaseDynKeyGetter())
 
 	if err = cache.Init(); err != nil {
-		testlogger.Panicf("cache.Init: %v\n", err)
+		return reportError("cache.Init: %v", err)
 	}
 	if err = storage.Init(); err != nil {
-		testlogger.Panicf("storage.Init: %v\n", err)
+		return reportError("storage.Init: %v", err)
 	}
 	if err = SyncDirs(filepath.Join(giteaRoot, "tests", "gitea-repositories-meta"), setting.RepoRootPath); err != nil {
-		testlogger.Panicf("util.SyncDirs: %v\n", err)
+		return reportError("util.SyncDirs: %v", err)
 	}
 
 	if err = git.InitFull(); err != nil {
-		testlogger.Panicf("git.Init: %v\n", err)
+		return reportError("git.Init: %v", err)
 	}
 
 	if testOpts.SetUp != nil {
 		if err := testOpts.SetUp(); err != nil {
-			testlogger.Panicf("set up failed: %v\n", err)
+			return reportError("set up failed: %v", err)
 		}
 	}
 
@@ -109,7 +114,7 @@ APP_DATA_PATH = `+appDataPath+`
 
 	if testOpts.TearDown != nil {
 		if err := testOpts.TearDown(); err != nil {
-			testlogger.Panicf("tear down failed: %v\n", err)
+			return reportError("tear down failed: %v", err)
 		}
 	}
 	return exitStatus
