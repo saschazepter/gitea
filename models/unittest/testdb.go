@@ -59,7 +59,8 @@ APP_DATA_PATH = `+appDataPath+`
 		os.Exit(1)
 	}
 
-	_, _ = fmt.Fprintf(os.Stderr, "mainTest: %s\n%s\n", appDataPath, log.Stack(2))
+	_, _ = fmt.Fprintf(os.Stderr, "mainTest: appDataPath=%s\n%s\n", appDataPath, log.Stack(2))
+	log.Error("mainTest: appDataPath=%s\n%s\n", appDataPath, log.Stack(2))
 
 	giteaRoot := setting.GetGiteaTestSourceRoot()
 	fixturesOpts := FixturesOptions{Dir: filepath.Join(giteaRoot, "models", "fixtures"), Files: testOpts.FixtureFiles}
