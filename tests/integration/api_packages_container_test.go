@@ -717,8 +717,7 @@ func TestPackageContainer(t *testing.T) {
 					AddTokenAuth(token)
 				resp := MakeRequest(t, req, http.StatusOK)
 
-				var apiPackages []*api.Package
-				DecodeJSON(t, resp, &apiPackages)
+				apiPackages := DecodeJSON(t, resp, []*api.Package{})
 				assert.Len(t, apiPackages, 4) // "latest", "main", "multi", "sha256:..."
 			})
 

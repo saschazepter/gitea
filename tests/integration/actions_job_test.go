@@ -159,8 +159,7 @@ jobs:
 				req := NewRequest(t, "GET", fmt.Sprintf("/api/v1/repos/%s/%s/actions/tasks", user2.Name, apiRepo.Name)).
 					AddTokenAuth(token)
 				resp := MakeRequest(t, req, http.StatusOK)
-				var actionTaskRespAfter api.ActionTaskResponse
-				DecodeJSON(t, resp, &actionTaskRespAfter)
+				actionTaskRespAfter := DecodeJSON(t, resp, &api.ActionTaskResponse{})
 				for _, apiTask := range actionTaskRespAfter.Entries {
 					if apiTask.HeadSHA != fileResp.Commit.SHA {
 						continue
@@ -709,9 +708,8 @@ func createActionsTestRepo(t *testing.T, authToken, repoName string, isPrivate b
 		DefaultBranch: "main",
 	}).AddTokenAuth(authToken)
 	resp := MakeRequest(t, req, http.StatusCreated)
-	var apiRepo api.Repository
-	DecodeJSON(t, resp, &apiRepo)
-	return &apiRepo
+	apiRepo := DecodeJSON(t, resp, &api.Repository{})
+	return apiRepo
 }
 
 func getWorkflowCreateFileOptions(u *user_model.User, branch, msg, content string) *api.CreateFileOptions {
@@ -740,9 +738,8 @@ func createWorkflowFile(t *testing.T, authToken, ownerName, repoName, treePath s
 	req := NewRequestWithJSON(t, "POST", fmt.Sprintf("/api/v1/repos/%s/%s/contents/%s", ownerName, repoName, treePath), opts).
 		AddTokenAuth(authToken)
 	resp := MakeRequest(t, req, http.StatusCreated)
-	var fileResponse api.FileResponse
-	DecodeJSON(t, resp, &fileResponse)
-	return &fileResponse
+	fileResponse := DecodeJSON(t, resp, &api.FileResponse{})
+	return fileResponse
 }
 
 // getTaskJobNameByTaskID get the job name of the task by task ID
@@ -752,8 +749,7 @@ func getTaskJobNameByTaskID(t *testing.T, authToken, ownerName, repoName string,
 	req := NewRequest(t, "GET", fmt.Sprintf("/api/v1/repos/%s/%s/actions/tasks", ownerName, repoName)).
 		AddTokenAuth(authToken)
 	resp := MakeRequest(t, req, http.StatusOK)
-	var taskRespBefore api.ActionTaskResponse
-	DecodeJSON(t, resp, &taskRespBefore)
+	taskRespBefore := DecodeJSON(t, resp, &api.ActionTaskResponse{})
 	for _, apiTask := range taskRespBefore.Entries {
 		if apiTask.ID == taskID {
 			return apiTask.Name

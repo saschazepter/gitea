@@ -470,8 +470,7 @@ func TestPackageConan(t *testing.T) {
 				req := NewRequest(t, "GET", fmt.Sprintf("%s/v1/conans/%s/%s/%s/%s/search", url, name, version1, user1, channel2))
 				resp := MakeRequest(t, req, http.StatusOK)
 
-				var result map[string]*conan_module.Conaninfo
-				DecodeJSON(t, resp, &result)
+				result := DecodeJSON(t, resp, map[string]*conan_module.Conaninfo{})
 
 				assert.Contains(t, result, conanPackageReference)
 				info := result[conanPackageReference]
@@ -764,8 +763,7 @@ func TestPackageConan(t *testing.T) {
 				req := NewRequest(t, "GET", fmt.Sprintf("%s/v2/conans/%s/%s/%s/%s/search", url, name, version1, user1, channel1))
 				resp := MakeRequest(t, req, http.StatusOK)
 
-				var result map[string]*conan_module.Conaninfo
-				DecodeJSON(t, resp, &result)
+				result := DecodeJSON(t, resp, map[string]*conan_module.Conaninfo{})
 
 				assert.Contains(t, result, conanPackageReference)
 				info := result[conanPackageReference]
@@ -774,8 +772,7 @@ func TestPackageConan(t *testing.T) {
 				req = NewRequest(t, "GET", fmt.Sprintf("%s/v2/conans/%s/%s/%s/%s/revisions/%s/search", url, name, version1, user1, channel1, revision1))
 				resp = MakeRequest(t, req, http.StatusOK)
 
-				result = make(map[string]*conan_module.Conaninfo)
-				DecodeJSON(t, resp, &result)
+				result = DecodeJSON(t, resp, map[string]*conan_module.Conaninfo{})
 
 				assert.Contains(t, result, conanPackageReference)
 				info = result[conanPackageReference]

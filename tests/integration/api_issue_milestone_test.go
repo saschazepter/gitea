@@ -39,15 +39,13 @@ func TestAPIIssuesMilestone(t *testing.T) {
 		State: &milestoneState,
 	}).AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusOK)
-	var apiMilestone structs.Milestone
-	DecodeJSON(t, resp, &apiMilestone)
+	apiMilestone := DecodeJSON(t, resp, &structs.Milestone{})
 	assert.EqualValues(t, "closed", apiMilestone.State)
 
 	req = NewRequest(t, "GET", urlStr).
 		AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
-	var apiMilestone2 structs.Milestone
-	DecodeJSON(t, resp, &apiMilestone2)
+	apiMilestone2 := DecodeJSON(t, resp, &structs.Milestone{})
 	assert.EqualValues(t, "closed", apiMilestone2.State)
 
 	req = NewRequestWithJSON(t, "POST", fmt.Sprintf("/api/v1/repos/%s/%s/milestones", owner.Name, repo.Name), structs.CreateMilestoneOption{
@@ -56,7 +54,7 @@ func TestAPIIssuesMilestone(t *testing.T) {
 		State:       "closed",
 	}).AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusCreated)
-	DecodeJSON(t, resp, &apiMilestone)
+	apiMilestone = DecodeJSON(t, resp, &structs.Milestone{})
 	assert.Equal(t, "wow", apiMilestone.Title)
 	assert.Equal(t, structs.StateClosed, apiMilestone.State)
 	assert.Nil(t, apiMilestone.Deadline)
@@ -72,7 +70,7 @@ func TestAPIIssuesMilestone(t *testing.T) {
 	req = NewRequest(t, "GET", fmt.Sprintf("/api/v1/repos/%s/%s/milestones/%s", owner.Name, repo.Name, apiMilestones[2].Title)).
 		AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
-	DecodeJSON(t, resp, &apiMilestone)
+	apiMilestone = DecodeJSON(t, resp, &structs.Milestone{})
 	assert.Equal(t, apiMilestones[2], apiMilestone)
 
 	req = NewRequest(t, "GET", fmt.Sprintf("/api/v1/repos/%s/%s/milestones?state=%s&name=%s", owner.Name, repo.Name, "all", "milestone2")).

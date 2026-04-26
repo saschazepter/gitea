@@ -57,8 +57,7 @@ func TestAPIModifyLabels(t *testing.T) {
 	req = NewRequest(t, "GET", urlStr).
 		AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
-	var apiLabels []*api.Label
-	DecodeJSON(t, resp, &apiLabels)
+	apiLabels := DecodeJSON(t, resp, []*api.Label{})
 	assert.Len(t, apiLabels, 2)
 
 	// GetLabel
@@ -107,8 +106,7 @@ func TestAPIAddIssueLabels(t *testing.T) {
 		Labels: []any{1, 2},
 	}).AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusOK)
-	var apiLabels []*api.Label
-	DecodeJSON(t, resp, &apiLabels)
+	apiLabels := DecodeJSON(t, resp, []*api.Label{})
 	assert.Len(t, apiLabels, unittest.GetCount(t, &issues_model.IssueLabel{IssueID: issue.ID}))
 
 	unittest.AssertExistsAndLoadBean(t, &issues_model.IssueLabel{IssueID: issue.ID, LabelID: 2})
@@ -132,8 +130,7 @@ func TestAPIAddIssueLabelsWithLabelNames(t *testing.T) {
 		Labels: []any{repoLabel.Name, orgLabel.Name},
 	}).AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusOK)
-	var apiLabels []*api.Label
-	DecodeJSON(t, resp, &apiLabels)
+	apiLabels := DecodeJSON(t, resp, []*api.Label{})
 	assert.Len(t, apiLabels, unittest.GetCount(t, &issues_model.IssueLabel{IssueID: issue.ID}))
 	var apiLabelNames []string
 	for _, label := range apiLabels {
@@ -162,8 +159,7 @@ func TestAPIReplaceIssueLabels(t *testing.T) {
 		Labels: []any{label.ID},
 	}).AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusOK)
-	var apiLabels []*api.Label
-	DecodeJSON(t, resp, &apiLabels)
+	apiLabels := DecodeJSON(t, resp, []*api.Label{})
 	if assert.Len(t, apiLabels, 1) {
 		assert.Equal(t, label.ID, apiLabels[0].ID)
 	}
@@ -188,8 +184,7 @@ func TestAPIReplaceIssueLabelsWithLabelNames(t *testing.T) {
 		Labels: []any{label.Name},
 	}).AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusOK)
-	var apiLabels []*api.Label
-	DecodeJSON(t, resp, &apiLabels)
+	apiLabels := DecodeJSON(t, resp, []*api.Label{})
 	if assert.Len(t, apiLabels, 1) {
 		assert.Equal(t, label.Name, apiLabels[0].Name)
 	}
@@ -234,8 +229,7 @@ func TestAPIModifyOrgLabels(t *testing.T) {
 	req = NewRequest(t, "GET", urlStr).
 		AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
-	var apiLabels []*api.Label
-	DecodeJSON(t, resp, &apiLabels)
+	apiLabels := DecodeJSON(t, resp, []*api.Label{})
 	assert.Len(t, apiLabels, 4)
 
 	// GetLabel

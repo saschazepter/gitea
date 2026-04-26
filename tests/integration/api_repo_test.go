@@ -30,8 +30,7 @@ func TestAPIUserReposNotLogin(t *testing.T) {
 	req := NewRequestf(t, "GET", "/api/v1/users/%s/repos", user.Name)
 	resp := MakeRequest(t, req, http.StatusOK)
 
-	var apiRepos []api.Repository
-	DecodeJSON(t, resp, &apiRepos)
+	apiRepos := DecodeJSON(t, resp, []api.Repository{})
 	expectedLen := unittest.GetCount(t, repo_model.Repository{OwnerID: user.ID},
 		unittest.Cond("is_private = ?", false))
 	assert.Len(t, apiRepos, expectedLen)
@@ -48,8 +47,7 @@ func TestAPISearchRepo(t *testing.T) {
 	req := NewRequestf(t, "GET", "/api/v1/repos/search?q=%s", keyword)
 	resp := MakeRequest(t, req, http.StatusOK)
 
-	var body api.SearchResults
-	DecodeJSON(t, resp, &body)
+	body := DecodeJSON(t, resp, &api.SearchResults{})
 	assert.NotEmpty(t, body.Data)
 	for _, repo := range body.Data {
 		assert.Contains(t, repo.Name, keyword)
@@ -201,8 +199,7 @@ func TestAPISearchRepo(t *testing.T) {
 						AddTokenAuth(token)
 					response := MakeRequest(t, request, http.StatusOK)
 
-					var body api.SearchResults
-					DecodeJSON(t, response, &body)
+					body := DecodeJSON(t, response, &api.SearchResults{})
 
 					repoNames := make([]string, 0, len(body.Data))
 					for _, repo := range body.Data {
@@ -303,8 +300,7 @@ func TestAPIOrgRepos(t *testing.T) {
 				AddTokenAuth(token)
 			resp := MakeRequest(t, req, http.StatusOK)
 
-			var apiRepos []*api.Repository
-			DecodeJSON(t, resp, &apiRepos)
+			apiRepos := DecodeJSON(t, resp, []*api.Repository{})
 			assert.Len(t, apiRepos, expected.count)
 			for _, repo := range apiRepos {
 				if !expected.includesPrivate {
@@ -337,8 +333,7 @@ func TestAPIOrgReposWithCodeUnitDisabled(t *testing.T) {
 		AddTokenAuth(token)
 
 	resp := MakeRequest(t, req, http.StatusOK)
-	var apiRepos []*api.Repository
-	DecodeJSON(t, resp, &apiRepos)
+	apiRepos := DecodeJSON(t, resp, []*api.Repository{})
 
 	var repoNames []string
 	for _, r := range apiRepos {
@@ -709,8 +704,7 @@ func TestAPIRepoGetReviewers(t *testing.T) {
 	req := NewRequestf(t, "GET", "/api/v1/repos/%s/%s/reviewers", user.Name, repo.Name).
 		AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusOK)
-	var reviewers []*api.User
-	DecodeJSON(t, resp, &reviewers)
+	reviewers := DecodeJSON(t, resp, []*api.User{})
 	if assert.Len(t, reviewers, 1) {
 		assert.ElementsMatch(t, []int64{2}, []int64{reviewers[0].ID})
 	}
@@ -726,7 +720,6 @@ func TestAPIRepoGetAssignees(t *testing.T) {
 	req := NewRequestf(t, "GET", "/api/v1/repos/%s/%s/assignees", user.Name, repo.Name).
 		AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusOK)
-	var assignees []*api.User
-	DecodeJSON(t, resp, &assignees)
+	assignees := DecodeJSON(t, resp, []*api.User{})
 	assert.Len(t, assignees, 2)
 }
