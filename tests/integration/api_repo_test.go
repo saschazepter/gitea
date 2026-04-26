@@ -245,7 +245,6 @@ func getRepo(t *testing.T, repoID int64) *repo_model.Repository {
 func TestAPIViewRepo(t *testing.T) {
 	defer tests.PrepareTestEnv(t)()
 
-
 	req := NewRequest(t, "GET", "/api/v1/repos/user2/repo1")
 	resp := MakeRequest(t, req, http.StatusOK)
 	repo := DecodeJSON(t, resp, &api.Repository{})

@@ -113,17 +113,13 @@ func TestPackageGo(t *testing.T) {
 		req = NewRequest(t, "GET", fmt.Sprintf("%s/%s/@v/latest.info", url, packageName))
 		resp = MakeRequest(t, req, http.StatusOK)
 
-		info = &Info{}
 		info = DecodeJSON(t, resp, &Info{})
-
 		assert.Equal(t, packageVersion2, info.Version)
 
 		req = NewRequest(t, "GET", fmt.Sprintf("%s/%s/@latest", url, packageName))
 		resp = MakeRequest(t, req, http.StatusOK)
 
-		info = &Info{}
 		info = DecodeJSON(t, resp, &Info{})
-
 		assert.Equal(t, packageVersion2, info.Version)
 	})
 

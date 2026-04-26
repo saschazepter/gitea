@@ -108,7 +108,6 @@ func TestAPINotification(t *testing.T) {
 
 	MakeRequest(t, NewRequest(t, "GET", "/api/v1/notifications/new"), http.StatusUnauthorized)
 
-
 	// -- check notifications --
 	req = NewRequest(t, "GET", "/api/v1/notifications/new").
 		AddTokenAuth(token)

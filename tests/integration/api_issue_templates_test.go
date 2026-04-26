@@ -18,7 +18,6 @@ import (
 
 func TestAPIIssueTemplateList(t *testing.T) {
 	onGiteaRun(t, func(*testing.T, *url.URL) {
-
 		user := unittest.AssertExistsAndLoadBean(t, &user_model.User{Name: "user2"})
 		repo := unittest.AssertExistsAndLoadBean(t, &repo_model.Repository{OwnerName: "user2", Name: "repo1"})
 

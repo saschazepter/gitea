@@ -182,7 +182,6 @@ func testOrgRestrictedUser(t *testing.T) {
 	req = NewRequestWithJSON(t, "POST", fmt.Sprintf("/api/v1/orgs/%s/teams", orgName), teamToCreate).
 		AddTokenAuth(token)
 
-
 	resp := adminSession.MakeRequest(t, req, http.StatusCreated)
 	apiTeam := DecodeJSON(t, resp, &api.Team{})
 	checkTeamResponse(t, "CreateTeam_codereader", apiTeam, teamToCreate.Name, teamToCreate.Description, teamToCreate.IncludesAllRepositories,
@@ -207,7 +206,6 @@ func testOrgRestrictedUser(t *testing.T) {
 func testTeamSearch(t *testing.T) {
 	user := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 15})
 	org := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 17})
-
 
 	session := loginUser(t, user.Name)
 	req := NewRequestf(t, "GET", "/org/%s/teams/-/search?q=%s", org.Name, "_team")

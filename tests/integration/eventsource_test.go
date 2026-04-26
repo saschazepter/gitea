@@ -61,7 +61,6 @@ func TestEventSourceManagerRun(t *testing.T) {
 	session := loginUser(t, user2.Name)
 	token := getTokenForLoggedInUser(t, session, auth_model.AccessTokenScopeWriteNotification, auth_model.AccessTokenScopeWriteRepository)
 
-
 	// -- mark notifications as read --
 	req := NewRequest(t, "GET", "/api/v1/notifications?status-types=unread").
 		AddTokenAuth(token)

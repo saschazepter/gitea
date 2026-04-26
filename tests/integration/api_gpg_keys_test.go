@@ -77,7 +77,6 @@ func TestGPGKeys(t *testing.T) {
 
 	// Check state after basic add
 	t.Run("CheckState", func(t *testing.T) {
-
 		req := NewRequest(t, "GET", "/api/v1/user/gpg_keys"). // GET all keys
 									AddTokenAuth(tokenWithGPGKeyScope)
 		resp := MakeRequest(t, req, http.StatusOK)

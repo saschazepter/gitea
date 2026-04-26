@@ -108,9 +108,7 @@ func TestAPICreateCommentAttachment(t *testing.T) {
 		SetHeader("Content-Type", writer.FormDataContentType())
 	resp := session.MakeRequest(t, req, http.StatusCreated)
 
-	apiAttachment := new(api.Attachment)
-	apiAttachment = DecodeJSON(t, resp, &api.Attachment{})
-
+	apiAttachment := DecodeJSON(t, resp, &api.Attachment{})
 	unittest.AssertExistsAndLoadBean(t, &repo_model.Attachment{ID: apiAttachment.ID, CommentID: comment.ID})
 }
 
@@ -161,9 +159,7 @@ func TestAPIEditCommentAttachment(t *testing.T) {
 		"name": newAttachmentName,
 	}).AddTokenAuth(token)
 	resp := session.MakeRequest(t, req, http.StatusCreated)
-	apiAttachment := new(api.Attachment)
-	apiAttachment = DecodeJSON(t, resp, &api.Attachment{})
-
+	apiAttachment := DecodeJSON(t, resp, &api.Attachment{})
 	unittest.AssertExistsAndLoadBean(t, &repo_model.Attachment{ID: apiAttachment.ID, CommentID: comment.ID, Name: apiAttachment.Name})
 }
 

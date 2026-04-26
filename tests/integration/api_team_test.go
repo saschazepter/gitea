@@ -263,7 +263,6 @@ func TestAPITeamSearch(t *testing.T) {
 	user := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 2})
 	org := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 17})
 
-
 	token := getUserToken(t, user.Name, auth_model.AccessTokenScopeReadOrganization)
 	req := NewRequestf(t, "GET", "/api/v1/orgs/%s/teams/search?q=%s", org.Name, "_team").
 		AddTokenAuth(token)
@@ -288,7 +287,6 @@ func TestAPIGetTeamRepo(t *testing.T) {
 	user := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 15})
 	teamRepo := unittest.AssertExistsAndLoadBean(t, &repo.Repository{ID: 24})
 	team := unittest.AssertExistsAndLoadBean(t, &organization.Team{ID: 5})
-
 
 	token := getUserToken(t, user.Name, auth_model.AccessTokenScopeReadOrganization)
 	req := NewRequestf(t, "GET", "/api/v1/teams/%d/repos/%s/", team.ID, teamRepo.FullName()).
