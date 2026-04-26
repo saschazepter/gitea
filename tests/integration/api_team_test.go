@@ -263,13 +263,12 @@ func TestAPITeamSearch(t *testing.T) {
 	user := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 2})
 	org := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 17})
 
-	var results TeamSearchResults
 
 	token := getUserToken(t, user.Name, auth_model.AccessTokenScopeReadOrganization)
 	req := NewRequestf(t, "GET", "/api/v1/orgs/%s/teams/search?q=%s", org.Name, "_team").
 		AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusOK)
-	DecodeJSON(t, resp, &results)
+	results := DecodeJSON(t, resp, &TeamSearchResults{})
 	assert.NotEmpty(t, results.Data)
 	assert.Len(t, results.Data, 1)
 	assert.Equal(t, "test_team", results.Data[0].Name)
@@ -290,13 +289,12 @@ func TestAPIGetTeamRepo(t *testing.T) {
 	teamRepo := unittest.AssertExistsAndLoadBean(t, &repo.Repository{ID: 24})
 	team := unittest.AssertExistsAndLoadBean(t, &organization.Team{ID: 5})
 
-	var results api.Repository
 
 	token := getUserToken(t, user.Name, auth_model.AccessTokenScopeReadOrganization)
 	req := NewRequestf(t, "GET", "/api/v1/teams/%d/repos/%s/", team.ID, teamRepo.FullName()).
 		AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusOK)
-	DecodeJSON(t, resp, &results)
+	DecodeJSON(t, resp, &api.Repository{})
 	assert.Equal(t, "big_test_private_4", teamRepo.Name)
 
 	// no access if not organization member

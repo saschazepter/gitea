@@ -461,8 +461,7 @@ func getRepoRunnerID(t *testing.T, authToken, ownerName, repoName string) int64 
 	t.Helper()
 	req := NewRequest(t, "GET", fmt.Sprintf("/api/v1/repos/%s/%s/actions/runners", ownerName, repoName)).AddTokenAuth(authToken)
 	resp := MakeRequest(t, req, http.StatusOK)
-	runnerList := api.ActionRunnersResponse{}
-	DecodeJSON(t, resp, &runnerList)
+	runnerList := DecodeJSON(t, resp, &api.ActionRunnersResponse{})
 	require.Len(t, runnerList.Entries, 1)
 	return runnerList.Entries[0].ID
 }

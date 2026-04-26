@@ -219,11 +219,10 @@ func testAPIOrgGeneral(t *testing.T) {
 		req = NewRequest(t, "GET", fmt.Sprintf("/api/v1/orgs/%s/teams/search?q=%s", orgName, "empty")).
 			AddTokenAuth(user1Token)
 		resp := MakeRequest(t, req, http.StatusOK)
-		data := struct {
+		data := DecodeJSON(t, resp, &struct {
 			Ok   bool
 			Data []*api.Team
-		}{}
-		DecodeJSON(t, resp, &data)
+		}{})
 		assert.True(t, data.Ok)
 		if assert.Len(t, data.Data, 1) {
 			assert.Equal(t, "Empty", data.Data[0].Name)

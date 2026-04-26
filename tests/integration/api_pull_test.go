@@ -549,8 +549,7 @@ func doAPIGetPullFiles(ctx APITestContext, pr *api.PullRequest, callback func(*t
 		}
 		resp := ctx.Session.MakeRequest(t, req, ctx.ExpectedCode)
 
-		files := make([]*api.ChangedFile, 0, 1)
-		DecodeJSON(t, resp, &files)
+		files := DecodeJSON(t, resp, []*api.ChangedFile{})
 
 		if callback != nil {
 			callback(t, files)

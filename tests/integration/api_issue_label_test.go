@@ -35,8 +35,7 @@ func TestAPIModifyLabels(t *testing.T) {
 		Description: "test label",
 	}).AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusCreated)
-	apiLabel := new(api.Label)
-	DecodeJSON(t, resp, &apiLabel)
+	apiLabel := DecodeJSON(t, resp, &api.Label{})
 	dbLabel := unittest.AssertExistsAndLoadBean(t, &issues_model.Label{ID: apiLabel.ID, RepoID: repo.ID})
 	assert.Equal(t, dbLabel.Name, apiLabel.Name)
 	assert.Equal(t, strings.TrimLeft(dbLabel.Color, "#"), apiLabel.Color)
@@ -65,7 +64,7 @@ func TestAPIModifyLabels(t *testing.T) {
 	req = NewRequest(t, "GET", singleURLStr).
 		AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
-	DecodeJSON(t, resp, &apiLabel)
+	apiLabel = DecodeJSON(t, resp, &api.Label{})
 	assert.Equal(t, strings.TrimLeft(dbLabel.Color, "#"), apiLabel.Color)
 
 	// EditLabel
@@ -77,7 +76,7 @@ func TestAPIModifyLabels(t *testing.T) {
 		Color: &newColor,
 	}).AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
-	DecodeJSON(t, resp, &apiLabel)
+	apiLabel = DecodeJSON(t, resp, &api.Label{})
 	assert.Equal(t, newColor, apiLabel.Color)
 	req = NewRequestWithJSON(t, "PATCH", singleURLStr, &api.EditLabelOption{
 		Color: &newColorWrong,
@@ -207,8 +206,7 @@ func TestAPIModifyOrgLabels(t *testing.T) {
 		Description: "test label",
 	}).AddTokenAuth(token)
 	resp := MakeRequest(t, req, http.StatusCreated)
-	apiLabel := new(api.Label)
-	DecodeJSON(t, resp, &apiLabel)
+	apiLabel := DecodeJSON(t, resp, &api.Label{})
 	dbLabel := unittest.AssertExistsAndLoadBean(t, &issues_model.Label{ID: apiLabel.ID, OrgID: owner.ID})
 	assert.Equal(t, dbLabel.Name, apiLabel.Name)
 	assert.Equal(t, strings.TrimLeft(dbLabel.Color, "#"), apiLabel.Color)
@@ -237,7 +235,7 @@ func TestAPIModifyOrgLabels(t *testing.T) {
 	req = NewRequest(t, "GET", singleURLStr).
 		AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
-	DecodeJSON(t, resp, &apiLabel)
+	apiLabel = DecodeJSON(t, resp, &api.Label{})
 	assert.Equal(t, strings.TrimLeft(dbLabel.Color, "#"), apiLabel.Color)
 
 	// EditLabel
@@ -249,7 +247,7 @@ func TestAPIModifyOrgLabels(t *testing.T) {
 		Color: &newColor,
 	}).AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
-	DecodeJSON(t, resp, &apiLabel)
+	apiLabel = DecodeJSON(t, resp, &api.Label{})
 	assert.Equal(t, newColor, apiLabel.Color)
 	req = NewRequestWithJSON(t, "PATCH", singleURLStr, &api.EditLabelOption{
 		Color: &newColorWrong,

@@ -106,8 +106,7 @@ func TestPackageGo(t *testing.T) {
 			Time    time.Time `json:"Time"`
 		}
 
-		info := &Info{}
-		DecodeJSON(t, resp, &info)
+		info := DecodeJSON(t, resp, &Info{})
 
 		assert.Equal(t, packageVersion, info.Version)
 
@@ -115,7 +114,7 @@ func TestPackageGo(t *testing.T) {
 		resp = MakeRequest(t, req, http.StatusOK)
 
 		info = &Info{}
-		DecodeJSON(t, resp, &info)
+		info = DecodeJSON(t, resp, &Info{})
 
 		assert.Equal(t, packageVersion2, info.Version)
 
@@ -123,7 +122,7 @@ func TestPackageGo(t *testing.T) {
 		resp = MakeRequest(t, req, http.StatusOK)
 
 		info = &Info{}
-		DecodeJSON(t, resp, &info)
+		info = DecodeJSON(t, resp, &Info{})
 
 		assert.Equal(t, packageVersion2, info.Version)
 	})

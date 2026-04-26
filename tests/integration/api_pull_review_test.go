@@ -173,10 +173,9 @@ func TestAPIPullReview(t *testing.T) {
 			},
 		},
 	}).AddTokenAuth(token)
-	var commentReview api.PullReview
 
 	resp = MakeRequest(t, req, http.StatusOK)
-	DecodeJSON(t, resp, &commentReview)
+	commentReview := DecodeJSON(t, resp, &api.PullReview{})
 	assert.EqualValues(t, "COMMENT", commentReview.State)
 	assert.Equal(t, 2, commentReview.CodeCommentsCount)
 	assert.Empty(t, commentReview.Body)
@@ -191,7 +190,7 @@ func TestAPIPullReview(t *testing.T) {
 	}).AddTokenAuth(token)
 
 	resp = MakeRequest(t, req, http.StatusOK)
-	DecodeJSON(t, resp, &commentReview)
+	commentReview = DecodeJSON(t, resp, &api.PullReview{})
 	assert.EqualValues(t, "COMMENT", commentReview.State)
 	assert.Equal(t, 0, commentReview.CodeCommentsCount)
 	assert.Equal(t, commentBody, commentReview.Body)

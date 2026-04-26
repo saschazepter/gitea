@@ -269,8 +269,7 @@ func doAPIMergePullRequest(ctx APITestContext, owner, repo string, index int64) 
 			if resp.Code != http.StatusMethodNotAllowed {
 				break
 			}
-			err := api.APIError{}
-			DecodeJSON(t, resp, &err)
+			err := DecodeJSON(t, resp, &api.APIError{})
 			assert.Equal(t, "Please try again later", err.Message)
 			queue.GetManager().FlushAll(t.Context(), 5*time.Second)
 			<-time.After(1 * time.Second)

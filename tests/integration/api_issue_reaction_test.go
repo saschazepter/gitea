@@ -78,6 +78,7 @@ func TestAPIIssuesReactions(t *testing.T) {
 		Created:  time.Unix(1573248003, 0),
 	}
 	expectResponse[1] = *apiNewReaction
+	assert.Len(t, apiReactions, 2)
 	for i, r := range apiReactions {
 		assert.Equal(t, expectResponse[i].Reaction, r.Reaction)
 		assert.Equal(t, expectResponse[i].Created.Unix(), r.Created.Unix())

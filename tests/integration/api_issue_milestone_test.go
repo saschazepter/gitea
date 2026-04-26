@@ -59,11 +59,10 @@ func TestAPIIssuesMilestone(t *testing.T) {
 	assert.Equal(t, structs.StateClosed, apiMilestone.State)
 	assert.Nil(t, apiMilestone.Deadline)
 
-	var apiMilestones []structs.Milestone
 	req = NewRequest(t, "GET", fmt.Sprintf("/api/v1/repos/%s/%s/milestones?state=%s", owner.Name, repo.Name, "all")).
 		AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
-	DecodeJSON(t, resp, &apiMilestones)
+	apiMilestones := DecodeJSON(t, resp, []structs.Milestone{})
 	assert.Len(t, apiMilestones, 4)
 	assert.Nil(t, apiMilestones[0].Deadline)
 
@@ -76,7 +75,7 @@ func TestAPIIssuesMilestone(t *testing.T) {
 	req = NewRequest(t, "GET", fmt.Sprintf("/api/v1/repos/%s/%s/milestones?state=%s&name=%s", owner.Name, repo.Name, "all", "milestone2")).
 		AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
-	DecodeJSON(t, resp, &apiMilestones)
+	apiMilestones = DecodeJSON(t, resp, []structs.Milestone{})
 	assert.Len(t, apiMilestones, 1)
 	assert.Equal(t, int64(2), apiMilestones[0].ID)
 

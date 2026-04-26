@@ -647,11 +647,10 @@ func TestGetIssueInfo(t *testing.T) {
 	urlStr := fmt.Sprintf("/%s/%s/issues/%d/info", owner.Name, repo.Name, issue.Index)
 	req := NewRequest(t, "GET", urlStr)
 	resp := session.MakeRequest(t, req, http.StatusOK)
-	var respStruct struct {
+	respStruct := DecodeJSON(t, resp, &struct {
 		ConvertedIssue api.Issue
 		RenderedLabels template.HTML
-	}
-	DecodeJSON(t, resp, &respStruct)
+	}{})
 
 	assert.Equal(t, issue.ID, respStruct.ConvertedIssue.ID)
 	assert.Contains(t, string(respStruct.RenderedLabels), `"labels-list"`)
