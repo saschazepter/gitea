@@ -70,7 +70,7 @@ func TestAPIIssuesMilestone(t *testing.T) {
 		AddTokenAuth(token)
 	resp = MakeRequest(t, req, http.StatusOK)
 	apiMilestone = DecodeJSON(t, resp, &structs.Milestone{})
-	assert.Equal(t, apiMilestones[2], apiMilestone)
+	assert.Equal(t, apiMilestones[2], *apiMilestone)
 
 	req = NewRequest(t, "GET", fmt.Sprintf("/api/v1/repos/%s/%s/milestones?state=%s&name=%s", owner.Name, repo.Name, "all", "milestone2")).
 		AddTokenAuth(token)

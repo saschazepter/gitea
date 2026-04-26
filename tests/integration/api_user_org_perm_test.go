@@ -172,7 +172,7 @@ func testHiddenMemberPermissionsForbidden(t *testing.T) {
 	resp := MakeRequest(t, adminReq, http.StatusOK)
 
 	apiOP := DecodeJSON(t, resp, &api.OrganizationPermissions{})
-	assert.Equal(t, api.OrganizationPermissions{
+	assert.Equal(t, &api.OrganizationPermissions{
 		IsOwner:             false,
 		IsAdmin:             false,
 		CanWrite:            true,
